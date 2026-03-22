@@ -31,6 +31,7 @@ import 'package:gap/gap.dart';
 import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
 
+import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_detail.dart';
 import 'package:rolopod/pages/contact_edit.dart';
@@ -75,7 +76,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   void _newContact(BuildContext context) {
     final provider = context.read<AppProvider>();
-    final bookName = provider.primaryBook?.name ?? 'Personal';
+    final bookName = provider.primaryBook?.name ?? defaultBookName;
     showDialog<void>(
       context: context,
       builder: (_) => ContactEdit(
@@ -104,11 +105,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
               prefixIcon: MarkdownTooltip(
                 message: '**Regex Search**\n\n'
                     'Filter contacts using a regular expression.\n\n'
-                    'Matches against name, organisation, email, phone and notes. '
-                    'For example:\n'
+                    'Matches against name, organisation, email, phone, tags and notes. '
+                    'Examples:\n'
                     '+ `smith` — all Smiths\n'
                     '+ `@gmail` — Gmail addresses\n'
-                    '+ `^A` — names starting with A',
+                    '+ `^A` — names starting with A\n'
+                    '+ `tag:anu` — contacts tagged *anu*',
                 child: Icon(
                   Icons.search,
                   color: _regexError ? cs.error : null,

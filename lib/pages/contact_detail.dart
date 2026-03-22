@@ -167,6 +167,76 @@ class ContactDetail extends StatelessWidget {
                       ),
                       const Gap(12),
                     ],
+                    if (contact.birthday != null) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.cake_outlined,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const Gap(12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Birthday',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '${contact.birthday!.day}/'
+                                '${contact.birthday!.month}/'
+                                '${contact.birthday!.year}',
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Gap(12),
+                    ],
+                    if (contact.tags.isNotEmpty) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.label_outline,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const Gap(12),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: contact.tags.map((tag) {
+                                final cs = Theme.of(context).colorScheme;
+                                return Chip(
+                                  label: Text(
+                                    tag,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: cs.onSecondaryContainer,
+                                    ),
+                                  ),
+                                  backgroundColor: cs.secondaryContainer,
+                                  padding: EdgeInsets.zero,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Gap(12),
+                    ],
                     if (contact.notes != null &&
                         contact.notes!.isNotEmpty) ...[
                       Row(

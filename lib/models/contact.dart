@@ -55,6 +55,9 @@ class Contact {
   final String? notes;
   final List<String> tags;
 
+  // ── Birthday ──────────────────────────────────────────────────────────────
+  final DateTime? birthday;
+
   // ── Timestamps ────────────────────────────────────────────────────────────
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -74,6 +77,7 @@ class Contact {
     this.urls = const [],
     this.notes,
     this.tags = const [],
+    this.birthday,
     this.createdAt,
     this.updatedAt,
   }) : id = id ?? const Uuid().v4();
@@ -120,6 +124,7 @@ class Contact {
     List<ContactField>? urls,
     String? notes,
     List<String>? tags,
+    DateTime? birthday,
     DateTime? updatedAt,
   }) =>
       Contact(
@@ -137,6 +142,7 @@ class Contact {
         urls: urls ?? this.urls,
         notes: notes ?? this.notes,
         tags: tags ?? this.tags,
+        birthday: birthday ?? this.birthday,
         createdAt: createdAt,
         updatedAt: updatedAt ?? DateTime.now(),
       );
@@ -156,6 +162,7 @@ class Contact {
         'urls': urls.map((u) => u.toJson()).toList(),
         'notes': notes,
         'tags': tags,
+        'birthday': birthday?.toIso8601String(),
         'createdAt': createdAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
       };
@@ -183,6 +190,9 @@ class Contact {
             .toList(),
         notes: j['notes'] as String?,
         tags: List<String>.from(j['tags'] as List? ?? []),
+        birthday: j['birthday'] != null
+            ? DateTime.tryParse(j['birthday'] as String)
+            : null,
         createdAt: j['createdAt'] != null
             ? DateTime.tryParse(j['createdAt'] as String)
             : null,

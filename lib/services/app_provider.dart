@@ -49,6 +49,17 @@ class AppProvider extends ChangeNotifier {
   /// Current regex search pattern.
   String _searchPattern = '';
 
+  AppProvider() {
+    // Ensure the default Personal book always exists.
+    _books.add(
+      AddressBook(
+        name: defaultBookName,
+        podPath: '$podBooksPath/$defaultBookName.json',
+        ownerWebId: '',
+      ),
+    );
+  }
+
   AppState get state => _state;
   String? get errorMessage => _errorMessage;
   List<AddressBook> get books => List.unmodifiable(_books);
@@ -123,6 +134,16 @@ class AppProvider extends ChangeNotifier {
 
   /// Import a list of contacts into a named book.
   void importContacts(List<Contact> contacts, {required String bookName}) {
+    // Ensure the book exists in the list so it appears in the UI.
+    if (!_books.any((b) => b.name == bookName)) {
+      _books.add(
+        AddressBook(
+          name: bookName,
+          podPath: '$podBooksPath/$bookName.json',
+          ownerWebId: '',
+        ),
+      );
+    }
     final list = _contactsByBook.putIfAbsent(bookName, () => []);
     list.addAll(contacts);
     debugPrint('[AppProvider] Imported ${contacts.length} contacts into $bookName');
@@ -178,10 +199,18 @@ class AppProvider extends ChangeNotifier {
 
   // ── Search helper ──────────────────────────────────────────────────────────
 
-  bool _matchesSearch(Contact c, RegExp re) =>
-      re.hasMatch(c.name) ||
-      re.hasMatch(c.organisation ?? '') ||
-      c.emails.any((e) => re.hasMatch(e.value)) ||
-      c.phones.any((p) => re.hasMatch(p.value)) ||
-      re.hasMatch(c.notes ?? '');
+  bool _matchesSearch(Contact c, RegExp re) {
+    // Support tag:foo syntax to filter by tag.
+    final pattern = re.pattern;
+    if (pattern.startsWith('tag:')) {
+      final tag = pattern.substring(4).toLowerCase();
+      return c.tags.any((t) => t.toLowerCase().contains(tag));
+    }
+    return re.hasMatch(c.name) ||
+        re.hasMatch(c.organisation ?? '') ||
+        c.emails.any((e) => re.hasMatch(e.value)) ||
+        c.phones.any((p) => re.hasMatch(p.value)) ||
+        c.tags.any((t) => re.hasMatch(t)) ||
+        re.hasMatch(c.notes ?? '');
+  }
 }

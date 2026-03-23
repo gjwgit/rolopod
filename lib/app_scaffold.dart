@@ -1,6 +1,6 @@
 /// AppScaffold — main SolidScaffold with left nav for RoloPod.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Tuesday 2026-03-24 08:17:30 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -64,7 +64,7 @@ class _AppScaffoldState extends State<AppScaffold> {
         title: appName,
         versionConfig: SolidVersionConfig(
           changelogUrl:
-              'https://github.com/gjwgit/rolopod/blob/main/CHANGELOG.md',
+              'https://github.com/gjwgit/rolopod/blob/dev/CHANGELOG.md',
         ),
       ),
       menu: [

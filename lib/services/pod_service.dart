@@ -1,6 +1,6 @@
 /// PodService — save and load encrypted address books on a Solid Pod.
 ///
-// Time-stamp: <Monday 2026-03-23 06:29:29 +1100 Graham Williams>
+// Time-stamp: <Tuesday 2026-03-24 08:18:31 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -47,9 +47,10 @@ import 'package:solidpod/solidpod.dart';
 /// valid Turtle and self-describing even before decryption.
 
 class PodService {
-  static const _prefixes =
-      '@prefix rolopod: <https://rolopod.solidcommunity.au/ont/> .\n'
-      '@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .\n';
+  static const _prefixes = '@prefix rolopod: <https://'
+      'rolopod.solidcommunity.au/ont/> .\n'
+      '@prefix xsd:     <http://'
+      'www.w3.org/2001/XMLSchema#> .\n';
 
   // ── Turtle helpers ────────────────────────────────────────────────────────
 

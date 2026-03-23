@@ -37,15 +37,18 @@ Code](https://claude.com/product/claude-code).
 
 ## ToDo
 
-	+ Save json file encrypted within a ttl file as
-	rolopod/data/Personal.ttl etc
-	+ Import vCard
-    + Implement de-duplication
+Save json file encrypted within a ttl file as
+rolopod/data/Personal.ttl etc
+
+Import vCard
+
+Implement de-duplication
 
 ## 0.2 Basic Functionality
 
-	+ Support basic import of BBDB [0.1.1 20260323 gjw]
++ Support load, save, editing, linking contacts [0.1.2 20260323 gjw]
++ Support basic import of BBDB [0.1.1 20260323 gjw]
 
 ## 0.1 Initial Shell App
 
-	+ Initial working app to view the design [0.1.0 20260323 gjw]
++ Initial working app to view the design [0.1.0 20260323 gjw]

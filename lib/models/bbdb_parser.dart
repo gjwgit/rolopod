@@ -1,6 +1,6 @@
 /// BbdbParser — tokeniser and record parser for Emacs BBDB format.
 ///
-// Time-stamp: <Monday 2026-03-23 22:12:06 +1100 Graham Williams>
+// Time-stamp: <Tuesday 2026-03-24 05:52:06 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -324,6 +324,9 @@ _StringToken _parseString(_Cursor c) {
   final buf = StringBuffer();
   while (!c.done) {
     final ch = c.peek();
+    // 20260324 gjw Without the escape here Emacs highlighting gets confused.
+    //
+    // ignore: unnecessary_string_escapes
     if (ch == '\"') {
       c.advance(1);
       break;

@@ -37,12 +37,27 @@ Code](https://claude.com/product/claude-code).
 
 ## ToDo
 
-Save json file encrypted within a ttl file as
-rolopod/data/Personal.ttl etc
+Set up the meta infrastructure for building installers etc.
 
-Import vCard
+Search enhancements — spouse:name, child:name search prefixes
+alongside tag:
 
-Implement de-duplication
+Duplicate detection — wire up the merge to also save to pod after
+merging
+
+vCard import — wire up the file picker for vCard the same way BBDB is
+done
+
+Pod sharing — implement the share UI in Settings (enter a WebID to
+share a book with)
+
+BBDB field mapping — the parser currently skips positions [2]/[3]
+(org/nickname); some BBDB files may have data there worth extracting
+
+Export — export a book back to BBDB or vCard format
+
+Settings screen — flesh out the book management (rename, delete,
+sharing UI)
 
 ## 0.2 Basic Functionality
 

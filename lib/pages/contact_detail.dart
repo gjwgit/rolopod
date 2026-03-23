@@ -266,7 +266,8 @@ class _ContactDetailState extends State<ContactDetail> {
                           Icon(
                             Icons.label_outline,
                             size: 18,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                           const Gap(12),
                           Expanded(
@@ -295,8 +296,7 @@ class _ContactDetailState extends State<ContactDetail> {
                       ),
                       const Gap(12),
                     ],
-                    if (contact.notes != null &&
-                        contact.notes!.isNotEmpty) ...[
+                    if (contact.notes != null && contact.notes!.isNotEmpty) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -445,7 +445,8 @@ class _Section extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(f.value, style: const TextStyle(fontSize: 13)),
+                        child:
+                            Text(f.value, style: const TextStyle(fontSize: 13)),
                       ),
                       if (f.label.isNotEmpty)
                         Text(

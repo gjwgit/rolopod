@@ -63,10 +63,11 @@ class ContactTile extends StatelessWidget {
       ),
       subtitle: Text(
         [
-          if (contact.organisation != null) contact.organisation!,
-          if (contact.primaryEmail != null) contact.primaryEmail!,
-          if (contact.primaryPhone != null) contact.primaryPhone!,
-        ].firstOrNull ?? '',
+              if (contact.organisation != null) contact.organisation!,
+              if (contact.primaryEmail != null) contact.primaryEmail!,
+              if (contact.primaryPhone != null) contact.primaryPhone!,
+            ].firstOrNull ??
+            '',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),

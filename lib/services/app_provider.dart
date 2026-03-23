@@ -87,11 +87,12 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// The primary (default) address book.
-  AddressBook? get primaryBook =>
-      _books.isEmpty ? null : _books.firstWhere(
-        (b) => b.name == defaultBookName,
-        orElse: () => _books.first,
-      );
+  AddressBook? get primaryBook => _books.isEmpty
+      ? null
+      : _books.firstWhere(
+          (b) => b.name == defaultBookName,
+          orElse: () => _books.first,
+        );
 
   void setSearchPattern(String pattern) {
     _searchPattern = pattern;
@@ -179,7 +180,9 @@ class AppProvider extends ChangeNotifier {
     }
     final list = _contactsByBook.putIfAbsent(bookName, () => []);
     list.addAll(contacts);
-    debugPrint('[AppProvider] Imported ${contacts.length} contacts into $bookName');
+    debugPrint(
+      '[AppProvider] Imported ${contacts.length} contacts into $bookName',
+    );
     notifyListeners();
   }
 

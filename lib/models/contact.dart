@@ -111,12 +111,10 @@ class Contact {
   }
 
   /// Primary email address, if any.
-  String? get primaryEmail =>
-      emails.isEmpty ? null : emails.first.value;
+  String? get primaryEmail => emails.isEmpty ? null : emails.first.value;
 
   /// Primary phone number, if any.
-  String? get primaryPhone =>
-      phones.isEmpty ? null : phones.first.value;
+  String? get primaryPhone => phones.isEmpty ? null : phones.first.value;
 
   Contact copyWith({
     String? bookName,

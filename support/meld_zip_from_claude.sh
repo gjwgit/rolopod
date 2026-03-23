@@ -1,17 +1,15 @@
 #!/bin/bash
 
-# Ensure no arguments were given.
+# Check if a filename was provided
 
 if [ $# -ne 0 ]; then
     echo "Usage: $0"
     exit 1
 fi
 
-APP=$(basename "$PWD")
-
 # Find the latest zip file to run meld across.
 
-FIND_CLAUDE=$(find ~/Downloads -name "${APP}_lib*.zip" 2>/dev/null | head -1)
+FIND_CLAUDE=$(find ~/Downloads -name "rolopod_lib*.zip" 2>/dev/null | head -1)
 echo "Found ${FIND_CLAUDE}"
 
 if [ -z "$FIND_CLAUDE" ]; then

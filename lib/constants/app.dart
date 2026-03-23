@@ -1,6 +1,6 @@
 /// App-wide constants: name, version, description and pod path.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Monday 2026-03-23 20:27:27 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -26,9 +26,6 @@
 library;
 
 const String appName = 'RoloPod';
-const String appVersion = '0.1.0';
-const String appDescription =
-    'Privacy-first address book with Solid Pod storage.';
 
 /// Pod path prefix for address book TTL files.
 const String podBooksPath = 'rolopod/data';

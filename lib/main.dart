@@ -30,8 +30,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
 
-import 'package:rolopod/services/app_provider.dart';
 import 'package:rolopod/app_scaffold.dart';
+import 'package:rolopod/services/app_provider.dart';
 
 void main() {
   runApp(

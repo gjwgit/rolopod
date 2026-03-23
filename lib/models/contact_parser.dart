@@ -91,7 +91,7 @@ Contact? _parseBbdbRecord(String line, {required String bookName}) {
   // [11] updated timestamp
 
   final firstName = _str(items[0]);
-  final lastName  = _str(items[1]);
+  final lastName = _str(items[1]);
 
   // [4] tags
   final tags = _strList(items[4]);
@@ -194,19 +194,21 @@ List<ContactAddress> _parseAddresses(dynamic token) {
       final lines = _strList(entry.items[1]);
       street = lines.join(', ');
     }
-    final city     = entry.items.length > 2 ? _str(entry.items[2]) : null;
-    final state    = entry.items.length > 3 ? _str(entry.items[3]) : null;
+    final city = entry.items.length > 2 ? _str(entry.items[2]) : null;
+    final state = entry.items.length > 3 ? _str(entry.items[3]) : null;
     final postcode = entry.items.length > 4 ? _str(entry.items[4]) : null;
-    final country  = entry.items.length > 5 ? _str(entry.items[5]) : null;
+    final country = entry.items.length > 5 ? _str(entry.items[5]) : null;
 
-    result.add(ContactAddress(
-      label: label,
-      street: street,
-      city: city,
-      state: state,
-      postcode: postcode,
-      country: country,
-    ));
+    result.add(
+      ContactAddress(
+        label: label,
+        street: street,
+        city: city,
+        state: state,
+        postcode: postcode,
+        country: country,
+      ),
+    );
   }
   return result;
 }
@@ -252,24 +254,28 @@ abstract class _Token {}
 class _StringToken extends _Token {
   final String value;
   _StringToken(this.value);
-  @override String toString() => '"$value"';
+  @override
+  String toString() => '"$value"';
 }
 
 class _NumberToken extends _Token {
   final String value;
   _NumberToken(this.value);
-  @override String toString() => value;
+  @override
+  String toString() => value;
 }
 
 class _NilToken extends _Token {
-  @override String toString() => 'nil';
+  @override
+  String toString() => 'nil';
 }
 
 /// A parenthesised or bracketed list: (...) or [...]
 class _ListToken extends _Token {
   final List<_Token> items;
   _ListToken(this.items);
-  @override String toString() => '(${items.join(' ')})';
+  @override
+  String toString() => '(${items.join(' ')})';
 }
 
 /// A cons cell: (key . "value")
@@ -277,7 +283,8 @@ class _ConsToken extends _Token {
   final String key;
   final String value;
   _ConsToken(this.key, this.value);
-  @override String toString() => '($key . "$value")';
+  @override
+  String toString() => '($key . "$value")';
 }
 
 List<_Token> _tokenise(String input) {
@@ -298,8 +305,8 @@ _Token? _parseToken(_Cursor c) {
   final ch = c.peek();
 
   if (ch == '"') return _parseString(c);
-  if (ch == '(' ) return _parseParenList(c);
-  if (ch == '[' ) return _parseBracketList(c);
+  if (ch == '(') return _parseParenList(c);
+  if (ch == '[') return _parseBracketList(c);
   // nil must be followed by whitespace or a closing bracket, not more letters.
   if (ch == 'n' && c.peekN(3) == 'nil') {
     final after = c.peekN(4);
@@ -317,10 +324,16 @@ _StringToken _parseString(_Cursor c) {
   final buf = StringBuffer();
   while (!c.done) {
     final ch = c.peek();
-    if (ch == '"') { c.advance(1); break; }
+    if (ch == '"') {
+      c.advance(1);
+      break;
+    }
     if (ch == '\\') {
       c.advance(1);
-      if (!c.done) { buf.write(c.peek()); c.advance(1); }
+      if (!c.done) {
+        buf.write(c.peek());
+        c.advance(1);
+      }
     } else {
       buf.write(ch);
       c.advance(1);
@@ -341,8 +354,7 @@ _Token _parseParenList(_Cursor c) {
     c.skipWhitespace();
 
     // Check for cons dot: (symbol . "value")
-    if (!c.done && c.peek() == '.' &&
-        items.length == 1 && items.first is _Token) {
+    if (!c.done && c.peek() == '.' && items.length == 1) {
       c.advance(1); // consume .
       c.skipWhitespace();
       final val = _parseToken(c);
@@ -379,8 +391,15 @@ _Token _parseAtom(_Cursor c) {
   final buf = StringBuffer();
   while (!c.done) {
     final ch = c.peek();
-    if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' ||
-        ch == ')' || ch == ']' || ch == '(' || ch == '[' || ch == '"') {
+    if (ch == ' ' ||
+        ch == '\t' ||
+        ch == '\n' ||
+        ch == '\r' ||
+        ch == ')' ||
+        ch == ']' ||
+        ch == '(' ||
+        ch == '[' ||
+        ch == '"') {
       break;
     }
     buf.write(ch);
@@ -400,7 +419,8 @@ class _Cursor {
 
   bool get done => _pos >= _s.length;
   String peek() => _s[_pos];
-  String peekN(int n) => _pos + n <= _s.length ? _s.substring(_pos, _pos + n) : '';
+  String peekN(int n) =>
+      _pos + n <= _s.length ? _s.substring(_pos, _pos + n) : '';
   void advance(int n) => _pos += n;
 
   void skipWhitespace() {
@@ -441,27 +461,32 @@ Contact? _parseVcardBlock(String block, {required String bookName}) {
   final unfolded = block.replaceAll(RegExp(r'\r?\n[ \t]'), '');
   final lines = unfolded.split(RegExp(r'\r?\n'));
 
-  String? firstName, lastName, displayName, nickname, organisation,
-      jobTitle, notes;
+  String? firstName,
+      lastName,
+      displayName,
+      nickname,
+      organisation,
+      jobTitle,
+      notes;
   DateTime? birthday;
-  final emails    = <ContactField>[];
-  final phones    = <ContactField>[];
+  final emails = <ContactField>[];
+  final phones = <ContactField>[];
   final addresses = <ContactAddress>[];
-  final urls      = <ContactField>[];
-  final tags      = <String>[];
+  final urls = <ContactField>[];
+  final tags = <String>[];
 
   for (final line in lines) {
     if (line.isEmpty) continue;
     final colon = line.indexOf(':');
     if (colon < 0) continue;
-    final key   = line.substring(0, colon).toUpperCase();
+    final key = line.substring(0, colon).toUpperCase();
     final value = line.substring(colon + 1).trim();
 
     if (key == 'FN') {
       displayName = value;
     } else if (key.startsWith('N;') || key == 'N') {
       final parts = value.split(';');
-      lastName  = parts.isNotEmpty ? _vDecode(parts[0]) : null;
+      lastName = parts.isNotEmpty ? _vDecode(parts[0]) : null;
       firstName = parts.length > 1 ? _vDecode(parts[1]) : null;
     } else if (key.startsWith('EMAIL')) {
       final label = _vParam(key, 'TYPE') ?? 'email';
@@ -476,14 +501,16 @@ Contact? _parseVcardBlock(String block, {required String bookName}) {
     } else if (key.startsWith('ADR')) {
       final label = _vParam(key, 'TYPE') ?? 'address';
       final parts = value.split(';');
-      addresses.add(ContactAddress(
-        label: label.toLowerCase(),
-        street:   parts.length > 2 ? _vDecode(parts[2]) : null,
-        city:     parts.length > 3 ? _vDecode(parts[3]) : null,
-        state:    parts.length > 4 ? _vDecode(parts[4]) : null,
-        postcode: parts.length > 5 ? _vDecode(parts[5]) : null,
-        country:  parts.length > 6 ? _vDecode(parts[6]) : null,
-      ));
+      addresses.add(
+        ContactAddress(
+          label: label.toLowerCase(),
+          street: parts.length > 2 ? _vDecode(parts[2]) : null,
+          city: parts.length > 3 ? _vDecode(parts[3]) : null,
+          state: parts.length > 4 ? _vDecode(parts[4]) : null,
+          postcode: parts.length > 5 ? _vDecode(parts[5]) : null,
+          country: parts.length > 6 ? _vDecode(parts[6]) : null,
+        ),
+      );
     } else if (key.startsWith('URL')) {
       if (value.isNotEmpty) {
         urls.add(ContactField(label: 'url', value: value));
@@ -499,19 +526,24 @@ Contact? _parseVcardBlock(String block, {required String bookName}) {
     } else if (key == 'BDAY') {
       birthday = _parseDate(value);
     } else if (key == 'CATEGORIES') {
-      tags.addAll(value.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty));
+      tags.addAll(
+        value.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty),
+      );
     }
   }
 
-  if (displayName == null && firstName == null && lastName == null &&
-      emails.isEmpty && phones.isEmpty) {
+  if (displayName == null &&
+      firstName == null &&
+      lastName == null &&
+      emails.isEmpty &&
+      phones.isEmpty) {
     return null;
   }
 
   return Contact(
     bookName: bookName,
     firstName: firstName?.isEmpty == true ? null : firstName,
-    lastName:  lastName?.isEmpty  == true ? null : lastName,
+    lastName: lastName?.isEmpty == true ? null : lastName,
     displayName: displayName?.isEmpty == true ? null : displayName,
     nickname: nickname,
     organisation: organisation,
@@ -533,8 +565,8 @@ String? _vParam(String key, String param) {
   return re.firstMatch(key)?.group(1);
 }
 
-String _vDecode(String s) =>
-    s.replaceAll(r'\n', '\n')
-     .replaceAll(r'\,', ',')
-     .replaceAll(r'\;', ';')
-     .trim();
+String _vDecode(String s) => s
+    .replaceAll(r'\n', '\n')
+    .replaceAll(r'\,', ',')
+    .replaceAll(r'\;', ';')
+    .trim();

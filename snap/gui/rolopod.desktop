@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=RoloPod
+Comment=Simple, Private, Secure Flutter Address Book
+Exec=rolopod
+Icon=${SNAP}/meta/gui/icon.png
+Terminal=false
+Type=Application
+Categories=Utility;

@@ -131,7 +131,10 @@ class PodService {
       return null;
     } catch (e, st) {
       debugPrint('[Pod] deleteBook error ($bookName): $e\n$st');
-      dev.log('[Pod] deleteBook error ($bookName): $e\n$st', name: 'PodService');
+      dev.log(
+        '[Pod] deleteBook error ($bookName): $e\n$st',
+        name: 'PodService',
+      );
       return e.toString();
     }
   }

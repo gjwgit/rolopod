@@ -193,8 +193,9 @@ class _ImportScreenState extends State<ImportScreen> {
           fileName: file.name,
           contacts: contacts,
           initialBook: bookName,
-          availableBooks:
-              provider.books.isEmpty ? [bookName] : provider.books.map((b) => b.name).toList(),
+          availableBooks: provider.books.isEmpty
+              ? [bookName]
+              : provider.books.map((b) => b.name).toList(),
         ),
       );
 
@@ -293,7 +294,7 @@ class _ImportConfirmDialogState extends State<_ImportConfirmDialog> {
               ),
               const Gap(8),
               DropdownButtonFormField<String>(
-                value: _selectedBook,
+                initialValue: _selectedBook,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   isDense: true,

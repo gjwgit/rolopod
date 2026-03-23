@@ -58,37 +58,37 @@ class _AppScaffoldState extends State<AppScaffold> {
   Widget build(BuildContext context) {
     context.watch<AppProvider>();
 
-    return SolidScaffold(
+    return const SolidScaffold(
       showLogout: false,
       appBar: SolidAppBarConfig(
         title: appName,
-        versionConfig: const SolidVersionConfig(
+        versionConfig: SolidVersionConfig(
           changelogUrl:
               'https://github.com/gjwgit/rolopod/blob/main/CHANGELOG.md',
         ),
       ),
       menu: [
-        const SolidMenuItem(
+        SolidMenuItem(
           title: 'Contacts',
           icon: Icons.contacts,
           tooltip: '**Contacts**\n\nBrowse and search all your address books.',
           child: ContactsScreen(),
         ),
-        const SolidMenuItem(
+        SolidMenuItem(
           title: 'Import',
           icon: Icons.upload_file,
           tooltip: '**Import**\n\n'
               'Import contacts from BBDB or vCard files.',
           child: ImportScreen(),
         ),
-        const SolidMenuItem(
+        SolidMenuItem(
           title: 'Duplicates',
           icon: Icons.content_copy,
           tooltip: '**Duplicates**\n\n'
               'Find and merge duplicate contacts across your address books.',
           child: DuplicatesScreen(),
         ),
-        const SolidMenuItem(
+        SolidMenuItem(
           title: 'Settings',
           icon: Icons.settings,
           tooltip: '**Settings**\n\n'

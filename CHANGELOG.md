@@ -37,8 +37,6 @@ Code](https://claude.com/product/claude-code).
 
 ## ToDo
 
-Set up the meta infrastructure for building installers etc.
-
 Search enhancements — spouse:name, child:name search prefixes
 alongside tag:
 
@@ -61,6 +59,8 @@ sharing UI)
 
 ## 0.2 Basic Functionality
 
++ Updated icons [0.1.4 20260324 gjw]
++ Meta infrastructure for building installers [0.1.3 20260324 gjw]
 + Support load, save, editing, linking contacts [0.1.2 20260323 gjw]
 + Support basic import of BBDB [0.1.1 20260323 gjw]
 

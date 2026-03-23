@@ -90,7 +90,7 @@ while [[ "$1" != "" ]]; do
     esac
 done
 
-# 20260324 gjw Ignore files listed in .lovignore
+# 20260324 gjw Ignore files listed in .locignore
 
 # Read .locignore patterns into an array
 

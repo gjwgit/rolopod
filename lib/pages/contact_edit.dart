@@ -32,6 +32,7 @@ import 'package:provider/provider.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/pages/edit_field_widgets.dart';
 
 class ContactEdit extends StatefulWidget {
   final Contact contact;
@@ -62,10 +63,10 @@ class _ContactEditState extends State<ContactEdit> {
   late List<TextEditingController> _children;
 
   // ── Dynamic list fields ────────────────────────────────────────────────────
-  late List<_LabeledField> _emails;
-  late List<_LabeledField> _phones;
-  late List<_LabeledField> _urls;
-  late List<_AddressField> _addresses;
+  late List<LabeledField> _emails;
+  late List<LabeledField> _phones;
+  late List<LabeledField> _urls;
+  late List<AddressField> _addresses;
   late List<TextEditingController> _tags;
 
   @override
@@ -85,15 +86,15 @@ class _ContactEditState extends State<ContactEdit> {
     _children =
         c.children.map((ch) => TextEditingController(text: ch)).toList();
 
-    _emails = c.emails.map(_LabeledField.from).toList();
-    if (_emails.isEmpty) _emails.add(_LabeledField.empty('email'));
+    _emails = c.emails.map(LabeledField.from).toList();
+    if (_emails.isEmpty) _emails.add(LabeledField.empty('email'));
 
-    _phones = c.phones.map(_LabeledField.from).toList();
-    if (_phones.isEmpty) _phones.add(_LabeledField.empty('mobile'));
+    _phones = c.phones.map(LabeledField.from).toList();
+    if (_phones.isEmpty) _phones.add(LabeledField.empty('mobile'));
 
-    _urls = c.urls.map(_LabeledField.from).toList();
+    _urls = c.urls.map(LabeledField.from).toList();
 
-    _addresses = c.addresses.map(_AddressField.from).toList();
+    _addresses = c.addresses.map(AddressField.from).toList();
 
     _tags = c.tags.map((t) => TextEditingController(text: t)).toList();
   }
@@ -227,19 +228,19 @@ class _ContactEditState extends State<ContactEdit> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionLabel(context, 'Name'),
+                    editSectionLabel(context, 'Name'),
                     const Gap(8),
                     Row(
                       children: [
                         Expanded(
-                          child: _Field(
+                          child: EditField(
                             controller: _firstName,
                             label: 'First name',
                           ),
                         ),
                         const Gap(12),
                         Expanded(
-                          child: _Field(
+                          child: EditField(
                             controller: _lastName,
                             label: 'Last name',
                           ),
@@ -247,23 +248,23 @@ class _ContactEditState extends State<ContactEdit> {
                       ],
                     ),
                     const Gap(8),
-                    _Field(
+                    EditField(
                       controller: _displayName,
                       label: 'Display name',
                     ),
                     const Gap(8),
-                    _Field(controller: _nickname, label: 'Nickname'),
+                    EditField(controller: _nickname, label: 'Nickname'),
                     const Gap(16),
-                    _sectionLabel(context, 'Organisation'),
+                    editSectionLabel(context, 'Organisation'),
                     const Gap(8),
-                    _Field(
+                    EditField(
                       controller: _organisation,
                       label: 'Organisation',
                     ),
                     const Gap(8),
-                    _Field(controller: _jobTitle, label: 'Job title'),
+                    EditField(controller: _jobTitle, label: 'Job title'),
                     const Gap(16),
-                    _sectionLabel(context, 'Email'),
+                    editSectionLabel(context, 'Email'),
                     const Gap(8),
                     _buildLabeledList(
                       context,
@@ -273,7 +274,7 @@ class _ContactEditState extends State<ContactEdit> {
                       defaultLabel: 'email',
                       labelOptions: ['email', 'work', 'home', 'other'],
                       onAdd: () => setState(
-                        () => _emails.add(_LabeledField.empty('email')),
+                        () => _emails.add(LabeledField.empty('email')),
                       ),
                       onRemove: (i) => setState(() {
                         _emails[i].dispose();
@@ -281,7 +282,7 @@ class _ContactEditState extends State<ContactEdit> {
                       }),
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Phone'),
+                    editSectionLabel(context, 'Phone'),
                     const Gap(8),
                     _buildLabeledList(
                       context,
@@ -291,7 +292,7 @@ class _ContactEditState extends State<ContactEdit> {
                       defaultLabel: 'mobile',
                       labelOptions: ['mobile', 'home', 'work', 'other'],
                       onAdd: () => setState(
-                        () => _phones.add(_LabeledField.empty('mobile')),
+                        () => _phones.add(LabeledField.empty('mobile')),
                       ),
                       onRemove: (i) => setState(() {
                         _phones[i].dispose();
@@ -299,12 +300,12 @@ class _ContactEditState extends State<ContactEdit> {
                       }),
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Address'),
+                    editSectionLabel(context, 'Address'),
                     const Gap(8),
                     ..._addresses.asMap().entries.map(
                           (e) => Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: _AddressEditor(
+                            child: AddressEditor(
                               field: e.value,
                               onRemove: () => setState(() {
                                 _addresses[e.key].dispose();
@@ -313,13 +314,13 @@ class _ContactEditState extends State<ContactEdit> {
                             ),
                           ),
                         ),
-                    _AddButton(
+                    EditAddButton(
                       label: 'Add address',
                       onPressed: () =>
-                          setState(() => _addresses.add(_AddressField.empty())),
+                          setState(() => _addresses.add(AddressField.empty())),
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Web'),
+                    editSectionLabel(context, 'Web'),
                     const Gap(8),
                     _buildLabeledList(
                       context,
@@ -329,14 +330,14 @@ class _ContactEditState extends State<ContactEdit> {
                       defaultLabel: 'url',
                       labelOptions: ['url', 'work', 'home', 'other'],
                       onAdd: () =>
-                          setState(() => _urls.add(_LabeledField.empty('url'))),
+                          setState(() => _urls.add(LabeledField.empty('url'))),
                       onRemove: (i) => setState(() {
                         _urls[i].dispose();
                         _urls.removeAt(i);
                       }),
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Birthday'),
+                    editSectionLabel(context, 'Birthday'),
                     const Gap(8),
                     InkWell(
                       onTap: _pickBirthday,
@@ -367,7 +368,7 @@ class _ContactEditState extends State<ContactEdit> {
                         ),
                       ),
                     const Gap(16),
-                    _sectionLabel(context, 'Personal'),
+                    editSectionLabel(context, 'Personal'),
                     const Gap(8),
                     DropdownButtonFormField<String>(
                       initialValue: [
@@ -403,12 +404,12 @@ class _ContactEditState extends State<ContactEdit> {
                       onChanged: (v) => setState(() => _gender.text = v ?? ''),
                     ),
                     const Gap(12),
-                    _Field(
+                    EditField(
                       controller: _spouse,
                       label: 'Spouse / partner name',
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Children'),
+                    editSectionLabel(context, 'Children'),
                     const Gap(8),
                     ..._children.asMap().entries.map(
                           (e) => Padding(
@@ -416,7 +417,7 @@ class _ContactEditState extends State<ContactEdit> {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: _Field(
+                                  child: EditField(
                                     controller: e.value,
                                     label: 'Child name',
                                   ),
@@ -433,14 +434,14 @@ class _ContactEditState extends State<ContactEdit> {
                             ),
                           ),
                         ),
-                    _AddButton(
+                    EditAddButton(
                       label: 'Add child',
                       onPressed: () => setState(
                         () => _children.add(TextEditingController()),
                       ),
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Tags'),
+                    editSectionLabel(context, 'Tags'),
                     const Gap(8),
                     ..._tags.asMap().entries.map(
                           (e) => Padding(
@@ -448,7 +449,7 @@ class _ContactEditState extends State<ContactEdit> {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: _Field(
+                                  child: EditField(
                                     controller: e.value,
                                     label: 'Tag',
                                   ),
@@ -465,14 +466,14 @@ class _ContactEditState extends State<ContactEdit> {
                             ),
                           ),
                         ),
-                    _AddButton(
+                    EditAddButton(
                       label: 'Add tag',
                       onPressed: () => setState(
                         () => _tags.add(TextEditingController()),
                       ),
                     ),
                     const Gap(16),
-                    _sectionLabel(context, 'Notes'),
+                    editSectionLabel(context, 'Notes'),
                     const Gap(8),
                     TextField(
                       controller: _notes,
@@ -522,7 +523,7 @@ class _ContactEditState extends State<ContactEdit> {
 
   Widget _buildLabeledList(
     BuildContext context, {
-    required List<_LabeledField> fields,
+    required List<LabeledField> fields,
     required String valuePlaceholder,
     required TextInputType keyboard,
     required String defaultLabel,
@@ -595,291 +596,8 @@ class _ContactEditState extends State<ContactEdit> {
                 ),
               ),
             ),
-        _AddButton(label: 'Add', onPressed: onAdd),
+        EditAddButton(label: 'Add', onPressed: onAdd),
       ],
-    );
-  }
-}
-
-// ── Section label ─────────────────────────────────────────────────────────────
-
-Widget _sectionLabel(BuildContext context, String text) => Text(
-      text,
-      style: TextStyle(
-        color: Theme.of(context).colorScheme.primary,
-        fontWeight: FontWeight.w600,
-        fontSize: 13,
-        letterSpacing: 0.5,
-      ),
-    );
-
-// ── Add button ────────────────────────────────────────────────────────────────
-
-class _AddButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-
-  const _AddButton({required this.label, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) => Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton.icon(
-          icon: const Icon(Icons.add, size: 16),
-          label: Text(label, style: const TextStyle(fontSize: 13)),
-          onPressed: onPressed,
-        ),
-      );
-}
-
-// ── Simple text field ─────────────────────────────────────────────────────────
-
-class _Field extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-
-  const _Field({
-    required this.controller,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) => TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          isDense: true,
-        ),
-      );
-}
-
-// ── Labeled field pair (label + value controllers) ────────────────────────────
-
-class _LabeledField {
-  final TextEditingController label;
-  final TextEditingController value;
-
-  _LabeledField({required String label, required String value})
-      : label = TextEditingController(text: label),
-        value = TextEditingController(text: value);
-
-  factory _LabeledField.from(ContactField f) =>
-      _LabeledField(label: f.label, value: f.value);
-
-  factory _LabeledField.empty(String defaultLabel) =>
-      _LabeledField(label: defaultLabel, value: '');
-
-  void dispose() {
-    label.dispose();
-    value.dispose();
-  }
-}
-
-extension on List<_LabeledField> {
-  List<ContactField> toFields() => where((f) => f.value.text.trim().isNotEmpty)
-      .map(
-        (f) => ContactField(
-          label: f.label.text.trim().isEmpty ? 'other' : f.label.text.trim(),
-          value: f.value.text.trim(),
-        ),
-      )
-      .toList();
-}
-
-// ── Address field group ───────────────────────────────────────────────────────
-
-class _AddressField {
-  final TextEditingController label;
-  final TextEditingController street;
-  final TextEditingController city;
-  final TextEditingController state;
-  final TextEditingController postcode;
-  final TextEditingController country;
-
-  _AddressField({
-    required String label,
-    required String street,
-    required String city,
-    required String state,
-    required String postcode,
-    required String country,
-  })  : label = TextEditingController(text: label),
-        street = TextEditingController(text: street),
-        city = TextEditingController(text: city),
-        state = TextEditingController(text: state),
-        postcode = TextEditingController(text: postcode),
-        country = TextEditingController(text: country);
-
-  factory _AddressField.from(ContactAddress a) => _AddressField(
-        label: a.label,
-        street: a.street ?? '',
-        city: a.city ?? '',
-        state: a.state ?? '',
-        postcode: a.postcode ?? '',
-        country: a.country ?? '',
-      );
-
-  factory _AddressField.empty() => _AddressField(
-        label: 'home',
-        street: '',
-        city: '',
-        state: '',
-        postcode: '',
-        country: '',
-      );
-
-  void dispose() {
-    for (final c in [label, street, city, state, postcode, country]) {
-      c.dispose();
-    }
-  }
-}
-
-extension on List<_AddressField> {
-  List<ContactAddress> toAddresses() {
-    return where(
-      (a) =>
-          a.street.text.trim().isNotEmpty ||
-          a.city.text.trim().isNotEmpty ||
-          a.postcode.text.trim().isNotEmpty,
-    )
-        .map(
-          (a) => ContactAddress(
-            label: a.label.text.trim().isEmpty ? 'home' : a.label.text.trim(),
-            street: a.street.text.trim().isEmpty ? null : a.street.text.trim(),
-            city: a.city.text.trim().isEmpty ? null : a.city.text.trim(),
-            state: a.state.text.trim().isEmpty ? null : a.state.text.trim(),
-            postcode:
-                a.postcode.text.trim().isEmpty ? null : a.postcode.text.trim(),
-            country:
-                a.country.text.trim().isEmpty ? null : a.country.text.trim(),
-          ),
-        )
-        .toList();
-  }
-}
-
-// ── Address editor widget ─────────────────────────────────────────────────────
-
-class _AddressEditor extends StatelessWidget {
-  final _AddressField field;
-  final VoidCallback onRemove;
-
-  const _AddressEditor({required this.field, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: cs.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue:
-                      ['home', 'work', 'other'].contains(field.label.text)
-                          ? field.label.text
-                          : 'home',
-                  decoration: const InputDecoration(
-                    labelText: 'Label',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  items: ['home', 'work', 'other']
-                      .map(
-                        (l) => DropdownMenuItem(
-                          value: l,
-                          child: Text(l),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) field.label.text = v;
-                  },
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline),
-                color: cs.error,
-                onPressed: onRemove,
-              ),
-            ],
-          ),
-          const Gap(8),
-          TextField(
-            controller: field.street,
-            decoration: const InputDecoration(
-              labelText: 'Street',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-          ),
-          const Gap(8),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: TextField(
-                  controller: field.city,
-                  decoration: const InputDecoration(
-                    labelText: 'City / Suburb',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              const Gap(8),
-              Expanded(
-                child: TextField(
-                  controller: field.state,
-                  decoration: const InputDecoration(
-                    labelText: 'State',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Gap(8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: field.postcode,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Postcode',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              const Gap(8),
-              Expanded(
-                flex: 2,
-                child: TextField(
-                  controller: field.country,
-                  decoration: const InputDecoration(
-                    labelText: 'Country',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

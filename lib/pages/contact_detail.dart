@@ -34,6 +34,7 @@ import 'package:provider/provider.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_edit.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/pages/detail_widgets.dart';
 
 class ContactDetail extends StatefulWidget {
   final Contact contact;
@@ -167,7 +168,7 @@ class _ContactDetailState extends State<ContactDetail> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (contact.emails.isNotEmpty) ...[
-                      _Section(
+                      DetailSection(
                         icon: Icons.email_outlined,
                         label: 'Email',
                         fields: contact.emails,
@@ -175,7 +176,7 @@ class _ContactDetailState extends State<ContactDetail> {
                       const Gap(12),
                     ],
                     if (contact.phones.isNotEmpty) ...[
-                      _Section(
+                      DetailSection(
                         icon: Icons.phone_outlined,
                         label: 'Phone',
                         fields: contact.phones,
@@ -183,11 +184,11 @@ class _ContactDetailState extends State<ContactDetail> {
                       const Gap(12),
                     ],
                     if (contact.addresses.isNotEmpty) ...[
-                      _AddressSection(addresses: contact.addresses),
+                      DetailAddressSection(addresses: contact.addresses),
                       const Gap(12),
                     ],
                     if (contact.urls.isNotEmpty) ...[
-                      _Section(
+                      DetailSection(
                         icon: Icons.link,
                         label: 'Web',
                         fields: contact.urls,
@@ -195,7 +196,7 @@ class _ContactDetailState extends State<ContactDetail> {
                       const Gap(12),
                     ],
                     if (contact.birthday != null) ...[
-                      _InfoRow(
+                      DetailInfoRow(
                         icon: Icons.cake_outlined,
                         label: 'Birthday',
                         value: '${contact.birthday!.day}/'
@@ -207,7 +208,7 @@ class _ContactDetailState extends State<ContactDetail> {
                     ],
                     if (contact.gender != null &&
                         contact.gender!.isNotEmpty) ...[
-                      _InfoRow(
+                      DetailInfoRow(
                         icon: Icons.person_outline,
                         label: 'Gender',
                         value: contact.gender!,
@@ -217,7 +218,7 @@ class _ContactDetailState extends State<ContactDetail> {
                     ],
                     if (contact.spouseName != null &&
                         contact.spouseName!.isNotEmpty) ...[
-                      _SpouseRow(
+                      DetailSpouseRow(
                         spouseName: contact.spouseName!,
                         cs: cs,
                       ),
@@ -402,220 +403,6 @@ class _ContactDetailState extends State<ContactDetail> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final List<ContactField> fields;
-
-  const _Section({
-    required this.icon,
-    required this.label,
-    required this.fields,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: cs.onSurfaceVariant),
-        const Gap(12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Gap(2),
-              ...fields.map(
-                (f) => Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child:
-                            Text(f.value, style: const TextStyle(fontSize: 13)),
-                      ),
-                      if (f.label.isNotEmpty)
-                        Text(
-                          f.label,
-                          style: TextStyle(
-                            color: cs.onSurfaceVariant,
-                            fontSize: 11,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AddressSection extends StatelessWidget {
-  final List<ContactAddress> addresses;
-
-  const _AddressSection({required this.addresses});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.location_on_outlined, size: 18, color: cs.onSurfaceVariant),
-        const Gap(12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Address',
-                style: TextStyle(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Gap(2),
-              ...addresses.map(
-                (a) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(a.summary, style: const TextStyle(fontSize: 13)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Simple info row ───────────────────────────────────────────────────────────
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final ColorScheme cs;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.cs,
-  });
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Icon(icon, size: 18, color: cs.onSurfaceVariant),
-          const Gap(12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(value, style: const TextStyle(fontSize: 13)),
-            ],
-          ),
-        ],
-      );
-}
-
-// ── Spouse row — tappable if contact exists ───────────────────────────────────
-
-class _SpouseRow extends StatelessWidget {
-  final String spouseName;
-  final ColorScheme cs;
-
-  const _SpouseRow({
-    required this.spouseName,
-    required this.cs,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.read<AppProvider>();
-    final spouse = provider.findContactByName(spouseName);
-
-    return Row(
-      children: [
-        Icon(Icons.favorite_outline, size: 18, color: cs.onSurfaceVariant),
-        const Gap(12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Spouse',
-              style: TextStyle(
-                color: cs.onSurfaceVariant,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            spouse != null
-                ? InkWell(
-                    onTap: () => showDialog<void>(
-                      context: context,
-                      builder: (_) => ContactDetail(contact: spouse),
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 1),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            spouseName,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: cs.primary,
-                              decoration: TextDecoration.underline,
-                              decorationColor: cs.primary,
-                            ),
-                          ),
-                          const Gap(4),
-                          Icon(
-                            Icons.open_in_new,
-                            size: 12,
-                            color: cs.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : Text(
-                    spouseName,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-          ],
-        ),
-      ],
     );
   }
 }

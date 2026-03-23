@@ -33,8 +33,8 @@ import 'package:provider/provider.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_edit.dart';
-import 'package:rolopod/services/app_provider.dart';
 import 'package:rolopod/pages/detail_widgets.dart';
+import 'package:rolopod/services/app_provider.dart';
 
 class ContactDetail extends StatefulWidget {
   final Contact contact;

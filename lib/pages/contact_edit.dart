@@ -31,8 +31,8 @@ import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 
 import 'package:rolopod/models/contact.dart';
-import 'package:rolopod/services/app_provider.dart';
 import 'package:rolopod/pages/edit_field_widgets.dart';
+import 'package:rolopod/services/app_provider.dart';
 
 class ContactEdit extends StatefulWidget {
   final Contact contact;

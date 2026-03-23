@@ -1,6 +1,6 @@
 /// BbdbParser — tokeniser and record parser for Emacs BBDB format.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Monday 2026-03-23 22:12:06 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -29,35 +29,6 @@ import 'package:flutter/foundation.dart';
 
 import 'package:rolopod/models/contact.dart';
 
-/// ContactParser — imports contacts from BBDB and vCard formats.
-///
-// Time-stamp: <2026-03-22 Graham Williams>
-///
-/// Copyright (C) 2026, Togaware Pty Ltd
-///
-/// Licensed under the GNU General Public License, Version 3 (the "License");
-///
-/// License: https://opensource.org/license/gpl-3-0
-//
-// This program is free software: you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation, either version 3 of the License, or (at your option)
-// any later version.
-//
-// This program is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-// details.
-//
-// You should have received a copy of the GNU General Public License along with
-// this program. If not, see <https://opensource.org/license/gpl-3-0>.
-///
-/// Authors: Graham Williams
-
-import 'package:flutter/foundation.dart';
-
-import 'package:rolopod/models/contact.dart';
-
 // ══════════════════════════════════════════════════════════════════════════════
 // BBDB parser
 //
@@ -68,11 +39,11 @@ import 'package:rolopod/models/contact.dart';
 //
 // Example:
 //   ["Graham" "Williams" nil nil
-//    ("anu" "st vincents" "family group")
+//    ("anu" "mnm" "family")
 //    (["mobile" "+61 4 1228 ..."])
 //    (["home" ("12 Abc St") "Mac" "ACT" "1234" "Australia"])
 //    ("g@tog.com" "g@acm.org")
-//    ((url . "http://...") (birthday . "1960-12-30"))
+//    ((url . "http://...") (birthday . "1980-11-23"))
 //    "uuid-string"
 //    "2020-12-26 ..." "2021-01-17 ..." nil]
 // ══════════════════════════════════════════════════════════════════════════════
@@ -353,7 +324,7 @@ _StringToken _parseString(_Cursor c) {
   final buf = StringBuffer();
   while (!c.done) {
     final ch = c.peek();
-    if (ch == '"') {
+    if (ch == '\"') {
       c.advance(1);
       break;
     }
@@ -463,7 +434,3 @@ class _Cursor {
     }
   }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// vCard parser
-// ══════════════════════════════════════════════════════════════════════════════

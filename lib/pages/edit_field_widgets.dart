@@ -112,16 +112,14 @@ class LabeledField {
 }
 
 extension LabeledFieldListX on List<LabeledField> {
-  List<ContactField> toFields() =>
-      where((f) => f.value.text.trim().isNotEmpty)
-          .map(
-            (f) => ContactField(
-              label:
-                  f.label.text.trim().isEmpty ? 'other' : f.label.text.trim(),
-              value: f.value.text.trim(),
-            ),
-          )
-          .toList();
+  List<ContactField> toFields() => where((f) => f.value.text.trim().isNotEmpty)
+      .map(
+        (f) => ContactField(
+          label: f.label.text.trim().isEmpty ? 'other' : f.label.text.trim(),
+          value: f.value.text.trim(),
+        ),
+      )
+      .toList();
 }
 
 // ── Address field group ───────────────────────────────────────────────────────
@@ -183,19 +181,14 @@ extension AddressFieldListX on List<AddressField> {
     )
         .map(
           (a) => ContactAddress(
-            label:
-                a.label.text.trim().isEmpty ? 'home' : a.label.text.trim(),
-            street:
-                a.street.text.trim().isEmpty ? null : a.street.text.trim(),
+            label: a.label.text.trim().isEmpty ? 'home' : a.label.text.trim(),
+            street: a.street.text.trim().isEmpty ? null : a.street.text.trim(),
             city: a.city.text.trim().isEmpty ? null : a.city.text.trim(),
-            state:
-                a.state.text.trim().isEmpty ? null : a.state.text.trim(),
-            postcode: a.postcode.text.trim().isEmpty
-                ? null
-                : a.postcode.text.trim(),
-            country: a.country.text.trim().isEmpty
-                ? null
-                : a.country.text.trim(),
+            state: a.state.text.trim().isEmpty ? null : a.state.text.trim(),
+            postcode:
+                a.postcode.text.trim().isEmpty ? null : a.postcode.text.trim(),
+            country:
+                a.country.text.trim().isEmpty ? null : a.country.text.trim(),
           ),
         )
         .toList();

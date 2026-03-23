@@ -33,6 +33,7 @@ import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/address_book.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/models/duplicate_detector.dart';
+import 'package:rolopod/services/pod_service.dart';
 
 enum AppState { idle, loading, loaded, error }
 
@@ -110,6 +111,38 @@ class AppProvider extends ChangeNotifier {
 
   // ── Contact CRUD ───────────────────────────────────────────────────────────
 
+  /// Find a contact by id across all books, or null if not found.
+  Contact? findContactById(String id) {
+    for (final list in _contactsByBook.values) {
+      for (final c in list) {
+        if (c.id == id) return c;
+      }
+    }
+    return null;
+  }
+
+  /// Find the first contact whose name fuzzy-matches [name], or null.
+  Contact? findContactByName(String name) {
+    final needle = name.trim().toLowerCase();
+    if (needle.isEmpty) return null;
+    // Exact match first.
+    for (final list in _contactsByBook.values) {
+      for (final c in list) {
+        if (c.name.toLowerCase() == needle) return c;
+      }
+    }
+    // Partial match fallback.
+    for (final list in _contactsByBook.values) {
+      for (final c in list) {
+        if (c.name.toLowerCase().contains(needle) ||
+            needle.contains(c.name.toLowerCase())) {
+          return c;
+        }
+      }
+    }
+    return null;
+  }
+
   /// Add or update a contact.
   void upsertContact(Contact contact) {
     final list = _contactsByBook.putIfAbsent(contact.bookName, () => []);
@@ -174,7 +207,69 @@ class AppProvider extends ChangeNotifier {
     upsertContact(merged);
   }
 
-  // ── Serialisation (for pod storage) ───────────────────────────────────────
+  // ── Pod save / load ────────────────────────────────────────────────────────
+
+  /// Save [bookName] contacts to the pod.
+  ///
+  /// Returns null on success, or an error message on failure.
+  Future<String?> saveBookToPod(String bookName) async {
+    final json = serialiseBook(bookName);
+    final error = await PodService.saveBook(bookName, json);
+    if (error != null) {
+      _errorMessage = 'Failed to save "$bookName": $error';
+      _state = AppState.error;
+      notifyListeners();
+    }
+    return error;
+  }
+
+  /// Load all address books listed on the pod into memory.
+  Future<void> loadAllBooksFromPod() async {
+    _state = AppState.loading;
+    notifyListeners();
+
+    try {
+      final bookNames = await PodService.listBooks();
+
+      // Always ensure Personal exists locally even if not yet on pod.
+      if (!bookNames.contains(defaultBookName)) {
+        bookNames.insert(0, defaultBookName);
+      }
+
+      for (final name in bookNames) {
+        // Ensure book is registered locally.
+        if (!_books.any((b) => b.name == name)) {
+          _books.add(
+            AddressBook(
+              name: name,
+              podPath: 'rolopod/data/$name.ttl',
+              ownerWebId: '',
+            ),
+          );
+        }
+        // Load contacts from pod.
+        final json = await PodService.loadBook(name);
+        if (json != null) deserialiseBook(name, json);
+      }
+
+      _state = AppState.loaded;
+    } catch (e, st) {
+      debugPrint('[AppProvider] loadAllBooksFromPod error: $e\n$st');
+      _errorMessage = 'Failed to load address books: $e';
+      _state = AppState.error;
+    }
+
+    notifyListeners();
+  }
+
+  /// Save all books to the pod (e.g. after import or edit).
+  Future<void> saveAllBooksToPod() async {
+    for (final book in _books) {
+      if (!book.isSharedWithMe) await saveBookToPod(book.name);
+    }
+  }
+
+  // ── Serialisation ──────────────────────────────────────────────────────────
 
   /// Serialise all contacts in [bookName] to JSON string.
   String serialiseBook(String bookName) {

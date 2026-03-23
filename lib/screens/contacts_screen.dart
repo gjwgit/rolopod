@@ -89,8 +89,29 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
-    final contacts = provider.visibleContacts;
     final cs = Theme.of(context).colorScheme;
+
+    // ── Loading state ──────────────────────────────────────────────────────
+    if (provider.state == AppState.loading) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const Gap(24),
+            Text(
+              'Loading address books…',
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final contacts = provider.visibleContacts;
 
     return Column(
       children: [
@@ -166,37 +187,60 @@ class _ContactsScreenState extends State<ContactsScreen> {
           ),
         ),
 
-        // ── Contact list ─────────────────────────────────────────────────────
+        // ── Contact list + add button ────────────────────────────────────────
         Expanded(
-          child: contacts.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.contacts_outlined,
-                        size: 64,
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+          child: Stack(
+            children: [
+              contacts.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.contacts_outlined,
+                            size: 64,
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                          ),
+                          const Gap(16),
+                          Text(
+                            provider.searchPattern.isEmpty
+                                ? 'No contacts yet'
+                                : 'No matches',
+                            style: TextStyle(color: cs.onSurfaceVariant),
+                          ),
+                          const Gap(24),
+                          FilledButton.icon(
+                            icon: const Icon(Icons.person_add),
+                            label: const Text('Add contact'),
+                            onPressed: () => _newContact(context),
+                          ),
+                        ],
                       ),
-                      const Gap(16),
-                      Text(
-                        provider.searchPattern.isEmpty
-                            ? 'No contacts yet'
-                            : 'No matches',
-                        style: TextStyle(color: cs.onSurfaceVariant),
+                    )
+                  : ListView.separated(
+                      // Extra bottom padding so the FAB never covers the last row.
+                      padding: const EdgeInsets.only(bottom: 88),
+                      itemCount: contacts.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (_, i) => ContactTile(
+                        contact: contacts[i],
+                        showBook: provider.books.length > 1,
+                        onTap: () => _openContact(context, contacts[i]),
                       ),
-                    ],
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: contacts.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (_, i) => ContactTile(
-                    contact: contacts[i],
-                    showBook: provider.books.length > 1,
-                    onTap: () => _openContact(context, contacts[i]),
-                  ),
+                    ),
+
+              // ── Floating add button ────────────────────────────────────
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton.extended(
+                  onPressed: () => _newContact(context),
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('New contact'),
                 ),
+              ),
+            ],
+          ),
         ),
       ],
     );

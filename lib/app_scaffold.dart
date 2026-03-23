@@ -37,8 +37,22 @@ import 'package:rolopod/screens/import_screen.dart';
 import 'package:rolopod/screens/settings_screen.dart';
 import 'package:rolopod/services/app_provider.dart';
 
-class AppScaffold extends StatelessWidget {
+class AppScaffold extends StatefulWidget {
   const AppScaffold({super.key});
+
+  @override
+  State<AppScaffold> createState() => _AppScaffoldState();
+}
+
+class _AppScaffoldState extends State<AppScaffold> {
+  @override
+  void initState() {
+    super.initState();
+    // Load all books from pod on first frame after login.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AppProvider>().loadAllBooksFromPod();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

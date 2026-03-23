@@ -27,6 +27,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 
@@ -34,7 +35,7 @@ import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_edit.dart';
 import 'package:rolopod/services/app_provider.dart';
 
-class ContactDetail extends StatelessWidget {
+class ContactDetail extends StatefulWidget {
   final Contact contact;
 
   const ContactDetail({
@@ -43,7 +44,33 @@ class ContactDetail extends StatelessWidget {
   });
 
   @override
+  State<ContactDetail> createState() => _ContactDetailState();
+}
+
+class _ContactDetailState extends State<ContactDetail> {
+  late Contact _contact;
+
+  @override
+  void initState() {
+    super.initState();
+    _contact = widget.contact;
+  }
+
+  Future<void> _openEdit(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => ContactEdit(contact: _contact),
+    );
+    // Refresh from provider in case the contact was updated.
+    if (!context.mounted) return;
+    final provider = context.read<AppProvider>();
+    final updated = provider.findContactById(_contact.id);
+    if (updated != null) setState(() => _contact = updated);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final contact = _contact;
     final cs = Theme.of(context).colorScheme;
     final isWide = MediaQuery.of(context).size.width > 600;
 
@@ -168,34 +195,65 @@ class ContactDetail extends StatelessWidget {
                       const Gap(12),
                     ],
                     if (contact.birthday != null) ...[
+                      _InfoRow(
+                        icon: Icons.cake_outlined,
+                        label: 'Birthday',
+                        value: '${contact.birthday!.day}/'
+                            '${contact.birthday!.month}/'
+                            '${contact.birthday!.year}',
+                        cs: cs,
+                      ),
+                      const Gap(12),
+                    ],
+                    if (contact.gender != null &&
+                        contact.gender!.isNotEmpty) ...[
+                      _InfoRow(
+                        icon: Icons.person_outline,
+                        label: 'Gender',
+                        value: contact.gender!,
+                        cs: cs,
+                      ),
+                      const Gap(12),
+                    ],
+                    if (contact.spouseName != null &&
+                        contact.spouseName!.isNotEmpty) ...[
+                      _SpouseRow(
+                        spouseName: contact.spouseName!,
+                        cs: cs,
+                      ),
+                      const Gap(12),
+                    ],
+                    if (contact.children.isNotEmpty) ...[
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
-                            Icons.cake_outlined,
+                            Icons.child_care,
                             size: 18,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                           const Gap(12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Birthday',
-                                style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Children',
+                                  style: TextStyle(
+                                    color: cs.onSurfaceVariant,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${contact.birthday!.day}/'
-                                '${contact.birthday!.month}/'
-                                '${contact.birthday!.year}',
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ],
+                                const Gap(2),
+                                ...contact.children.map(
+                                  (child) => Text(
+                                    child,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -260,16 +318,24 @@ class ContactDetail extends StatelessWidget {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const Gap(2),
-                                Text(
-                                  contact.notes!,
-                                  style: const TextStyle(fontSize: 13),
+                                const Gap(4),
+                                MarkdownBody(
+                                  data: contact.notes!,
+                                  styleSheet: MarkdownStyleSheet.fromTheme(
+                                    Theme.of(context),
+                                  ).copyWith(
+                                    p: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontSize: 13),
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
+                      const Gap(4),
                     ],
                   ],
                 ),
@@ -298,13 +364,7 @@ class ContactDetail extends StatelessWidget {
                   FilledButton.icon(
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      showDialog<void>(
-                        context: context,
-                        builder: (_) => ContactEdit(contact: contact),
-                      );
-                    },
+                    onPressed: () => _openEdit(context),
                   ),
                 ],
               ),
@@ -321,7 +381,7 @@ class ContactDetail extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete contact?'),
-        content: Text('Remove ${contact.name} from ${contact.bookName}?'),
+        content: Text('Remove ${_contact.name} from ${_contact.bookName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -332,7 +392,9 @@ class ContactDetail extends StatelessWidget {
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () {
-              provider.deleteContact(contact.id);
+              final bookName = _contact.bookName;
+              provider.deleteContact(_contact.id);
+              provider.saveBookToPod(bookName);
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },
@@ -440,6 +502,117 @@ class _AddressSection extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Simple info row ───────────────────────────────────────────────────────────
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final ColorScheme cs;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.cs,
+  });
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          Icon(icon, size: 18, color: cs.onSurfaceVariant),
+          const Gap(12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(value, style: const TextStyle(fontSize: 13)),
+            ],
+          ),
+        ],
+      );
+}
+
+// ── Spouse row — tappable if contact exists ───────────────────────────────────
+
+class _SpouseRow extends StatelessWidget {
+  final String spouseName;
+  final ColorScheme cs;
+
+  const _SpouseRow({
+    required this.spouseName,
+    required this.cs,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    final spouse = provider.findContactByName(spouseName);
+
+    return Row(
+      children: [
+        Icon(Icons.favorite_outline, size: 18, color: cs.onSurfaceVariant),
+        const Gap(12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Spouse',
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            spouse != null
+                ? InkWell(
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => ContactDetail(contact: spouse),
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 1),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            spouseName,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: cs.primary,
+                              decoration: TextDecoration.underline,
+                              decorationColor: cs.primary,
+                            ),
+                          ),
+                          const Gap(4),
+                          Icon(
+                            Icons.open_in_new,
+                            size: 12,
+                            color: cs.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Text(
+                    spouseName,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+          ],
         ),
       ],
     );

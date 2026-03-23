@@ -203,12 +203,17 @@ class _ImportScreenState extends State<ImportScreen> {
             .map((c) => c.copyWith(bookName: confirmed.bookName))
             .toList();
         provider.importContacts(importContacts, bookName: confirmed.bookName);
+        // Persist to pod.
+        final error = await provider.saveBookToPod(confirmed.bookName);
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Imported ${importContacts.length} contact'
-              '${importContacts.length == 1 ? '' : 's'} '
-              'into "${confirmed.bookName}".',
+              error != null
+                  ? 'Imported but failed to save to pod: $error'
+                  : 'Imported ${importContacts.length} contact'
+                      '${importContacts.length == 1 ? '' : 's'} '
+                      'into "${confirmed.bookName}".',
             ),
           ),
         );

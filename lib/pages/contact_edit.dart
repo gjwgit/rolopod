@@ -57,6 +57,9 @@ class _ContactEditState extends State<ContactEdit> {
   late final TextEditingController _jobTitle;
   late final TextEditingController _notes;
   DateTime? _birthday;
+  late TextEditingController _gender;
+  late TextEditingController _spouse;
+  late List<TextEditingController> _children;
 
   // ── Dynamic list fields ────────────────────────────────────────────────────
   late List<_LabeledField> _emails;
@@ -77,6 +80,11 @@ class _ContactEditState extends State<ContactEdit> {
     _jobTitle    = TextEditingController(text: c.jobTitle ?? '');
     _notes       = TextEditingController(text: c.notes ?? '');
     _birthday    = c.birthday;
+    _gender      = TextEditingController(text: c.gender ?? '');
+    _spouse      = TextEditingController(text: c.spouseName ?? '');
+    _children    = c.children
+        .map((ch) => TextEditingController(text: ch))
+        .toList();
 
     _emails = c.emails.map(_LabeledField.from).toList();
     if (_emails.isEmpty) _emails.add(_LabeledField.empty('email'));
@@ -95,10 +103,11 @@ class _ContactEditState extends State<ContactEdit> {
   void dispose() {
     for (final ctrl in [
       _firstName, _lastName, _displayName, _nickname,
-      _organisation, _jobTitle, _notes,
+      _organisation, _jobTitle, _notes, _gender, _spouse,
     ]) {
       ctrl.dispose();
     }
+    for (final ch in _children) ch.dispose();
     for (final f in _emails) f.dispose();
     for (final f in _phones) f.dispose();
     for (final f in _urls) f.dispose();
@@ -124,6 +133,12 @@ class _ContactEditState extends State<ContactEdit> {
       jobTitle:     _clean(_jobTitle),
       notes:        _clean(_notes),
       birthday:     _birthday,
+      gender:       _clean(_gender),
+      spouseName:   _clean(_spouse),
+      children:     _children
+          .map((c) => c.text.trim())
+          .where((c) => c.isNotEmpty)
+          .toList(),
       emails:   _emails.toFields(),
       phones:   _phones.toFields(),
       urls:     _urls.toFields(),
@@ -134,7 +149,10 @@ class _ContactEditState extends State<ContactEdit> {
           .toList(),
       updatedAt: DateTime.now(),
     );
-    context.read<AppProvider>().upsertContact(updated);
+    final provider = context.read<AppProvider>();
+    provider.upsertContact(updated);
+    // Persist to pod in background — don't block the UI.
+    provider.saveBookToPod(updated.bookName);
     Navigator.of(context).pop();
   }
 
@@ -339,6 +357,77 @@ class _ContactEditState extends State<ContactEdit> {
                       ),
 
                     const Gap(16),
+                    _sectionLabel(context, 'Personal'),
+                    const Gap(8),
+                    DropdownButtonFormField<String>(
+                      value: ['', 'Male', 'Female', 'Non-binary', 'Other']
+                              .contains(_gender.text)
+                          ? _gender.text
+                          : '',
+                      decoration: const InputDecoration(
+                        labelText: 'Gender',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: '', child: Text('—')),
+                        DropdownMenuItem(value: 'Male', child: Text('Male')),
+                        DropdownMenuItem(
+                          value: 'Female',
+                          child: Text('Female'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Non-binary',
+                          child: Text('Non-binary'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Other',
+                          child: Text('Other'),
+                        ),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _gender.text = v ?? ''),
+                    ),
+                    const Gap(12),
+                    _Field(
+                      controller: _spouse,
+                      label: 'Spouse / partner name',
+                    ),
+
+                    const Gap(16),
+                    _sectionLabel(context, 'Children'),
+                    const Gap(8),
+                    ..._children.asMap().entries.map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _Field(
+                                controller: e.value,
+                                label: 'Child name',
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              color: cs.error,
+                              onPressed: () => setState(() {
+                                _children[e.key].dispose();
+                                _children.removeAt(e.key);
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    _AddButton(
+                      label: 'Add child',
+                      onPressed: () => setState(
+                        () => _children.add(TextEditingController()),
+                      ),
+                    ),
+
+                    const Gap(16),
                     _sectionLabel(context, 'Tags'),
                     const Gap(8),
                     ..._tags.asMap().entries.map(
@@ -374,10 +463,18 @@ class _ContactEditState extends State<ContactEdit> {
                     const Gap(16),
                     _sectionLabel(context, 'Notes'),
                     const Gap(8),
-                    _Field(
+                    TextField(
                       controller: _notes,
-                      label: 'Notes',
-                      maxLines: 4,
+                      maxLines: null,
+                      minLines: 4,
+                      keyboardType: TextInputType.multiline,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes (markdown supported)',
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        hintText: '**bold**, *italic*, - bullet lists…',
+                      ),
                     ),
 
                     const Gap(8),

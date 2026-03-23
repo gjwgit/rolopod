@@ -30,8 +30,8 @@ const String appVersion = '0.1.0';
 const String appDescription =
     'Privacy-first address book with Solid Pod storage.';
 
-/// Pod path prefix for address book files.
-const String podBooksPath = 'rolopod/books';
+/// Pod path prefix for address book TTL files.
+const String podBooksPath = 'rolopod/data';
 
 /// Name of the default address book.
 const String defaultBookName = 'Personal';

@@ -58,6 +58,11 @@ class Contact {
   // ── Birthday ──────────────────────────────────────────────────────────────
   final DateTime? birthday;
 
+  // ── Personal ──────────────────────────────────────────────────────────────
+  final String? gender;
+  final String? spouseName;
+  final List<String> children;
+
   // ── Timestamps ────────────────────────────────────────────────────────────
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -78,6 +83,9 @@ class Contact {
     this.notes,
     this.tags = const [],
     this.birthday,
+    this.gender,
+    this.spouseName,
+    this.children = const [],
     this.createdAt,
     this.updatedAt,
   }) : id = id ?? const Uuid().v4();
@@ -125,6 +133,9 @@ class Contact {
     String? notes,
     List<String>? tags,
     DateTime? birthday,
+    String? gender,
+    String? spouseName,
+    List<String>? children,
     DateTime? updatedAt,
   }) =>
       Contact(
@@ -143,6 +154,9 @@ class Contact {
         notes: notes ?? this.notes,
         tags: tags ?? this.tags,
         birthday: birthday ?? this.birthday,
+        gender: gender ?? this.gender,
+        spouseName: spouseName ?? this.spouseName,
+        children: children ?? this.children,
         createdAt: createdAt,
         updatedAt: updatedAt ?? DateTime.now(),
       );
@@ -163,6 +177,9 @@ class Contact {
         'notes': notes,
         'tags': tags,
         'birthday': birthday?.toIso8601String(),
+        'gender': gender,
+        'spouseName': spouseName,
+        'children': children,
         'createdAt': createdAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
       };
@@ -193,6 +210,9 @@ class Contact {
         birthday: j['birthday'] != null
             ? DateTime.tryParse(j['birthday'] as String)
             : null,
+        gender: j['gender'] as String?,
+        spouseName: j['spouseName'] as String?,
+        children: List<String>.from(j['children'] as List? ?? []),
         createdAt: j['createdAt'] != null
             ? DateTime.tryParse(j['createdAt'] as String)
             : null,

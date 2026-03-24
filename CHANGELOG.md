@@ -37,6 +37,9 @@ Code](https://claude.com/product/claude-code).
 
 ## ToDo
 
+Pod sharing — implement the share UI in Settings (enter a WebID to
+share a book with)
+
 Search enhancements — spouse:name, child:name search prefixes
 alongside tag:
 
@@ -45,9 +48,6 @@ merging
 
 vCard import — wire up the file picker for vCard the same way BBDB is
 done
-
-Pod sharing — implement the share UI in Settings (enter a WebID to
-share a book with)
 
 BBDB field mapping — the parser currently skips positions [2]/[3]
 (org/nickname); some BBDB files may have data there worth extracting

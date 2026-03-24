@@ -25,9 +25,11 @@
 
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
+import 'package:solidpod/solidpod.dart';
 import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
@@ -45,29 +47,49 @@ class AppScaffold extends StatefulWidget {
 }
 
 class _AppScaffoldState extends State<AppScaffold> {
+  /// Whether the security key is currently saved/available.
+  bool _isKeySaved = false;
+
   @override
   void initState() {
     super.initState();
-    // Load all books from pod on first frame after login.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppProvider>().loadAllBooksFromPod();
-    });
+
+    // On the first frame after login, prompt for the security key if it is
+    // not already cached, then load the address books.
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initKeys());
+  }
+
+  Future<void> _initKeys() async {
+    try {
+      // Prompt for the security key if not already cached.
+      // This shows the key entry popup on all platforms including Android.
+      await getKeyFromUserIfRequired(context, widget);
+
+      if (!mounted) return;
+      setState(() => _isKeySaved = true);
+
+      // Key is now available — safe to read encrypted pod files.
+      await context.read<AppProvider>().loadAllBooksFromPod();
+    } catch (e, st) {
+      debugPrint('[AppScaffold] Security key error: $e\n$st');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<AppProvider>();
 
-    return const SolidScaffold(
+    return SolidScaffold(
       showLogout: false,
       appBar: SolidAppBarConfig(
         title: appName,
-        versionConfig: SolidVersionConfig(
+        versionConfig: const SolidVersionConfig(
           changelogUrl:
-              'https://github.com/gjwgit/rolopod/blob/dev/CHANGELOG.md',
+              'https://github.com/gjwgit/rolopod/blob/main/CHANGELOG.md',
         ),
       ),
-      menu: [
+      menu: const [
         SolidMenuItem(
           title: 'Contacts',
           icon: Icons.contacts,
@@ -96,6 +118,26 @@ class _AppScaffoldState extends State<AppScaffold> {
           child: SettingsScreen(),
         ),
       ],
+      statusBar: SolidStatusBarConfig(
+        // Security key widget — allows the user to view, change or forget
+        // their key. onKeyStatusChanged re-triggers loading if the key is
+        // forgotten and then re-entered.
+        securityKeyStatus: SolidSecurityKeyStatus(
+          isKeySaved: _isKeySaved,
+          title: 'RoloPod Security Keys',
+          tooltip: '**Security Keys**\n\n'
+              'Manage your Solid Pod encryption key.\n'
+              'Tap to view, change or forget the key.',
+          onKeyStatusChanged: (hasKey) {
+            final wasKeySaved = _isKeySaved;
+            setState(() => _isKeySaved = hasKey);
+            if (hasKey && !wasKeySaved) {
+              // Key was re-entered after being forgotten — reload.
+              context.read<AppProvider>().loadAllBooksFromPod();
+            }
+          },
+        ),
+      ),
     );
   }
 }

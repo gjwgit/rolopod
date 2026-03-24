@@ -34,6 +34,13 @@ import 'package:rolopod/app_scaffold.dart';
 import 'package:rolopod/services/app_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialise SolidUI security key manager so it can automatically prompt
+  // the user for their security key whenever solidpod needs it.
+
+  SolidSecurityKeyCentralManager.instance;
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppProvider(),

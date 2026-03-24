@@ -1,6 +1,6 @@
 /// AppScaffold — main SolidScaffold with left nav for RoloPod.
 ///
-// Time-stamp: <Tuesday 2026-03-24 08:17:30 +1100 Graham Williams>
+// Time-stamp: <Tuesday 2026-03-24 17:03:49 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -82,11 +82,11 @@ class _AppScaffoldState extends State<AppScaffold> {
 
     return SolidScaffold(
       showLogout: false,
-      appBar: SolidAppBarConfig(
+      appBar: const SolidAppBarConfig(
         title: appName,
-        versionConfig: const SolidVersionConfig(
+        versionConfig: SolidVersionConfig(
           changelogUrl:
-              'https://github.com/gjwgit/rolopod/blob/main/CHANGELOG.md',
+              'https://github.com/gjwgit/rolopod/blob/dev/CHANGELOG.md',
         ),
       ),
       menu: const [
@@ -119,6 +119,8 @@ class _AppScaffoldState extends State<AppScaffold> {
         ),
       ],
       statusBar: SolidStatusBarConfig(
+        serverInfo: SolidServerInfo(serverUri: SolidConfig.defaultServerUrl),
+        loginStatus: const SolidLoginStatus(),
         // Security key widget — allows the user to view, change or forget
         // their key. onKeyStatusChanged re-triggers loading if the key is
         // forgotten and then re-entered.

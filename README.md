@@ -61,3 +61,35 @@ a Pull Request. The app is implemented in
 ## Introduction
 
 A Flutter app to manage address books.
+
+## Android Network Config
+
+Add to `android/app/src/main/AndroidManifest.xml` inside `<application>`:
+
+```xml
+android:usesCleartextTraffic="true"
+android:networkSecurityConfig="@xml/network_security_config"
+```
+
+And create `android/app/src/main/res/xml/network_security_config.xml`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">au-apigw.ccs.hyundai.com.au</domain>
+    </domain-config>
+</network-security-config>
+```
+
+## iOS
+
+Add to `ios/Runner/Info.plist`:
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+```

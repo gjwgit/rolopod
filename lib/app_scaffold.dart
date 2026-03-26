@@ -97,10 +97,11 @@ class _AppScaffoldState extends State<AppScaffold> {
           child: ContactsScreen(),
         ),
         SolidMenuItem(
-          title: 'Import',
-          icon: Icons.upload_file,
-          tooltip: '**Import**\n\n'
-              'Import contacts from BBDB or vCard files.',
+          title: 'Import / Export',
+          icon: Icons.import_export,
+          tooltip: '**Import / Export**\n\n'
+              'Import contacts from BBDB or vCard files, '
+              'or export a backup as JSON.',
           child: ImportScreen(),
         ),
         SolidMenuItem(

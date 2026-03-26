@@ -26,6 +26,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -126,9 +127,191 @@ class _ImportScreenState extends State<ImportScreen> {
             loading: _loading,
             onImport: () => _pickAndImport(context, _ImportFormat.vcard),
           ),
+          const Gap(16),
+          _ImportCard(
+            icon: Icons.backup_outlined,
+            title: 'RoloPod JSON backup',
+            subtitle: 'Restore contacts from a previously exported .json backup.',
+            loading: _loading,
+            onImport: () => _pickAndImportJson(context),
+          ),
+
+          // ── Export ──────────────────────────────────────────────────────
+          const Gap(32),
+          Text(
+            'Export / Backup',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const Gap(8),
+          Text(
+            'Save a copy of an address book as a JSON file for backup '
+            'or to move to another device.',
+            style: TextStyle(color: cs.onSurfaceVariant),
+          ),
+          const Gap(16),
+          ...context.read<AppProvider>().books.map(
+                (book) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _ImportCard(
+                    icon: Icons.download_outlined,
+                    title: 'Export "${book.name}"',
+                    subtitle:
+                        'Save ${book.name}.json to your Downloads folder.',
+                    loading: _loading,
+                    onImport: () => _exportBook(context, book.name),
+                  ),
+                ),
+              ),
         ],
       ),
     );
+  }
+
+  // ── JSON backup import ─────────────────────────────────────────────────────
+
+  Future<void> _pickAndImportJson(BuildContext context) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Select RoloPod JSON backup',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        setState(() => _loading = false);
+        return;
+      }
+
+      final file = result.files.first;
+      if (file.bytes == null) {
+        setState(() {
+          _error = 'Could not read file contents.';
+          _loading = false;
+        });
+        return;
+      }
+
+      final content = utf8.decode(file.bytes!);
+      final provider = context.read<AppProvider>();
+
+      // Detect book name from filename: Personal.json → Personal
+      final bookName = file.name.replaceAll(RegExp(r'\.json$'), '');
+      final targetBook = provider.books.any((b) => b.name == bookName)
+          ? bookName
+          : provider.primaryBook?.name ?? defaultBookName;
+
+      // Parse the JSON contact list
+      final decoded = jsonDecode(content) as List?;
+      if (decoded == null || decoded.isEmpty) {
+        setState(() {
+          _error = 'No contacts found in "${file.name}".';
+          _loading = false;
+        });
+        return;
+      }
+
+      final contacts = decoded
+          .map((j) => Contact.fromJson(j as Map<String, dynamic>)
+              .copyWith(bookName: targetBook))
+          .toList();
+
+      setState(() => _loading = false);
+      if (!context.mounted) return;
+
+      final confirmed = await showDialog<_ImportResult>(
+        context: context,
+        builder: (_) => _ImportConfirmDialog(
+          fileName: file.name,
+          contacts: contacts,
+          initialBook: targetBook,
+          availableBooks: provider.books.isEmpty
+              ? [targetBook]
+              : provider.books.map((b) => b.name).toList(),
+        ),
+      );
+
+      if (confirmed != null && context.mounted) {
+        final toImport = contacts
+            .map((c) => c.copyWith(bookName: confirmed.bookName))
+            .toList();
+        provider.importContacts(toImport, bookName: confirmed.bookName);
+        final error = await provider.saveBookToPod(confirmed.bookName);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error != null
+                  ? 'Imported but failed to save to pod: $error'
+                  : 'Restored ${toImport.length} contact'
+                      '${toImport.length == 1 ? '' : 's'} '
+                      'into "${confirmed.bookName}".',
+            ),
+          ),
+        );
+      }
+    } catch (e, st) {
+      debugPrint('[Import] JSON error: $e\n$st');
+      setState(() {
+        _error = 'Import failed: $e';
+        _loading = false;
+      });
+    }
+  }
+
+  // ── JSON export ────────────────────────────────────────────────────────────
+
+  Future<void> _exportBook(BuildContext context, String bookName) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final provider = context.read<AppProvider>();
+      final json = const JsonEncoder.withIndent('  ')
+          .convert(jsonDecode(provider.serialiseBook(bookName)));
+      final bytes = utf8.encode(json);
+      final fileName = '$bookName.json';
+
+      if (kIsWeb) {
+        // Web: use FilePicker save dialog if available, else show error.
+        setState(() {
+          _error = 'Export to file not supported on web.';
+          _loading = false;
+        });
+        return;
+      }
+
+      // Desktop/mobile: save to Downloads folder.
+      final home = Platform.environment['HOME']
+          ?? Platform.environment['USERPROFILE']
+          ?? '.';
+      final downloads = Directory('$home/Downloads');
+      final dir = downloads.existsSync() ? downloads : Directory(home);
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes);
+
+      setState(() => _loading = false);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Exported to ${file.path}'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('[Export] error: $e\n$st');
+      setState(() {
+        _error = 'Export failed: $e';
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _pickAndImport(

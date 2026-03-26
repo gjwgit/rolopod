@@ -59,6 +59,7 @@ sharing UI)
 
 ## 0.2 Basic Functionality
 
++ Initial address book sharing functionality [0.1.6 20260326 gjw]
 + Prompt for the security key if it is not cached [0.1.5 20260324 gjw]
 + Updated icons [0.1.4 20260324 gjw]
 + Meta infrastructure for building installers [0.1.3 20260324 gjw]

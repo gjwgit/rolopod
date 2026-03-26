@@ -1,6 +1,6 @@
 /// SettingsScreen — manage address books, sharing and preferences.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Tuesday 2026-03-24 08:17:30 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -29,7 +29,9 @@ import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:solidui/solidui.dart';
 
+import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/address_book.dart';
 import 'package:rolopod/services/app_provider.dart';
 
@@ -56,6 +58,32 @@ class SettingsScreen extends StatelessWidget {
             icon: const Icon(Icons.add),
             label: const Text('New address book'),
             onPressed: () => _newBook(context, provider),
+          ),
+          const Gap(32),
+          Text(
+            'Shared With Me',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const Gap(8),
+          Text(
+            'Address books that others have shared with you.',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+          ),
+          const Gap(16),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.folder_shared_outlined),
+            label: const Text('View shared resources'),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const SharedResourcesUi(
+                  child: _ReturnPage(),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -88,7 +116,7 @@ class SettingsScreen extends StatelessWidget {
                 provider.addBook(
                   AddressBook(
                     name: name,
-                    podPath: 'rolopod/books/$name.json',
+                    podPath: '$podBooksPath/$name.ttl',
                     ownerWebId: '',
                   ),
                 );
@@ -102,6 +130,8 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
+
+// ── Book tile with sharing actions ────────────────────────────────────────────
 
 class _BookTile extends StatelessWidget {
   final AddressBook book;
@@ -129,14 +159,44 @@ class _BookTile extends StatelessWidget {
                       'person${book.sharedWith.length == 1 ? '' : 's'}',
           style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: cs.onSurfaceVariant,
-        ),
-        onTap: () {
-          // TODO: open book settings (sharing, rename, delete)
-        },
+        // Only show sharing actions for books the user owns.
+        trailing: book.isSharedWithMe
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.share_outlined),
+                tooltip: 'Manage sharing',
+                onPressed: () => _manageSharing(context, book),
+              ),
       ),
     );
   }
+}
+
+void _manageSharing(BuildContext context, AddressBook book) {
+  Navigator.push(
+    context,
+    MaterialPageRoute<void>(
+      builder: (_) => GrantPermissionUi(
+        resourceName: '${book.name}.ttl',
+        child: const _ReturnPage(),
+      ),
+    ),
+  );
+}
+
+// ── Simple back-navigation page used as child of solidpod UI widgets ──────────
+
+class _ReturnPage extends StatelessWidget {
+  const _ReturnPage();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text(appName)),
+        body: Center(
+          child: FilledButton.tonal(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Return to Settings'),
+          ),
+        ),
+      );
 }

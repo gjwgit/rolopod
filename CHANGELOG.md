@@ -40,9 +40,6 @@ Code](https://claude.com/product/claude-code).
 Pod sharing — implement the share UI in Settings (enter a WebID to
 share a book with)
 
-Cleanup: Phones should migrate from (+61 2) 1234 5678 to +61 2 1234
-5678. Identify cards to cleanup and list them and ask for each one.
-
 Search enhancements — spouse:name, child:name search prefixes
 alongside tag:
 

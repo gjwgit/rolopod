@@ -25,11 +25,9 @@
 
 library;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:solidpod/solidpod.dart';
 import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
@@ -120,7 +118,8 @@ class _AppScaffoldState extends State<AppScaffold> {
         ),
       ],
       statusBar: SolidStatusBarConfig(
-        serverInfo: SolidServerInfo(serverUri: SolidConfig.defaultServerUrl),
+        serverInfo:
+            const SolidServerInfo(serverUri: SolidConfig.defaultServerUrl),
         loginStatus: const SolidLoginStatus(),
         // Security key widget — allows the user to view, change or forget
         // their key. onKeyStatusChanged re-triggers loading if the key is

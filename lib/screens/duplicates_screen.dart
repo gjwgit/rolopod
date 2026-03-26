@@ -31,7 +31,6 @@ import 'package:gap/gap.dart';
 import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
 
-import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/models/duplicate_detector.dart';
 import 'package:rolopod/screens/duplicate_compare.dart';
 import 'package:rolopod/services/app_provider.dart';

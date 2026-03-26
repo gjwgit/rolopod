@@ -38,6 +38,7 @@ import 'package:provider/provider.dart';
 import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/models/contact_parser.dart';
+import 'package:rolopod/screens/import_widgets.dart';
 import 'package:rolopod/services/app_provider.dart';
 
 enum _ImportFormat { bbdb, vcard }
@@ -112,7 +113,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),
           ],
           const Gap(24),
-          _ImportCard(
+          ImportCard(
             icon: Icons.description_outlined,
             title: 'Emacs BBDB',
             subtitle: 'Import from a .bbdb file exported from Emacs.',
@@ -120,7 +121,7 @@ class _ImportScreenState extends State<ImportScreen> {
             onImport: () => _pickAndImport(context, _ImportFormat.bbdb),
           ),
           const Gap(16),
-          _ImportCard(
+          ImportCard(
             icon: Icons.contact_page_outlined,
             title: 'vCard (.vcf)',
             subtitle: 'Import from a vCard file (v3.0 or v4.0).',
@@ -128,10 +129,11 @@ class _ImportScreenState extends State<ImportScreen> {
             onImport: () => _pickAndImport(context, _ImportFormat.vcard),
           ),
           const Gap(16),
-          _ImportCard(
+          ImportCard(
             icon: Icons.backup_outlined,
             title: 'RoloPod JSON backup',
-            subtitle: 'Restore contacts from a previously exported .json backup.',
+            subtitle:
+                'Restore contacts from a previously exported .json backup.',
             loading: _loading,
             onImport: () => _pickAndImportJson(context),
           ),
@@ -152,11 +154,11 @@ class _ImportScreenState extends State<ImportScreen> {
           ...context.read<AppProvider>().books.map(
                 (book) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _ImportCard(
+                  child: ImportCard(
                     icon: Icons.download_outlined,
                     title: 'Export "${book.name}"',
                     subtitle:
-                        'Save ${book.name}.json to your Downloads folder.',
+                        'Save ${book.name}_YYYYMMDD_HHMM.json to your Downloads folder.',
                     loading: _loading,
                     onImport: () => _exportBook(context, book.name),
                   ),
@@ -174,6 +176,10 @@ class _ImportScreenState extends State<ImportScreen> {
       _loading = true;
       _error = null;
     });
+
+    // Capture context-dependent objects before the first await.
+    final provider = context.read<AppProvider>();
+    final messenger = ScaffoldMessenger.of(context);
 
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -198,10 +204,11 @@ class _ImportScreenState extends State<ImportScreen> {
       }
 
       final content = utf8.decode(file.bytes!);
-      final provider = context.read<AppProvider>();
 
-      // Detect book name from filename: Personal.json → Personal
-      final bookName = file.name.replaceAll(RegExp(r'\.json$'), '');
+      // Detect book name from filename: Personal_20260326_2005.json → Personal
+      final bookName = file.name
+          .replaceAll(RegExp(r'_\d{8}_\d{4}'), '')
+          .replaceAll(RegExp(r'\.json$'), '');
       final targetBook = provider.books.any((b) => b.name == bookName)
           ? bookName
           : provider.primaryBook?.name ?? defaultBookName;
@@ -217,16 +224,18 @@ class _ImportScreenState extends State<ImportScreen> {
       }
 
       final contacts = decoded
-          .map((j) => Contact.fromJson(j as Map<String, dynamic>)
-              .copyWith(bookName: targetBook))
+          .map(
+            (j) => Contact.fromJson(j as Map<String, dynamic>)
+                .copyWith(bookName: targetBook),
+          )
           .toList();
 
       setState(() => _loading = false);
       if (!context.mounted) return;
 
-      final confirmed = await showDialog<_ImportResult>(
+      final confirmed = await showDialog<ImportResult>(
         context: context,
-        builder: (_) => _ImportConfirmDialog(
+        builder: (_) => ImportConfirmDialog(
           fileName: file.name,
           contacts: contacts,
           initialBook: targetBook,
@@ -242,8 +251,7 @@ class _ImportScreenState extends State<ImportScreen> {
             .toList();
         provider.importContacts(toImport, bookName: confirmed.bookName);
         final error = await provider.saveBookToPod(confirmed.bookName);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               error != null
@@ -272,12 +280,19 @@ class _ImportScreenState extends State<ImportScreen> {
       _error = null;
     });
 
+    // Capture context-dependent objects before the first await.
+    final provider = context.read<AppProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
-      final provider = context.read<AppProvider>();
       final json = const JsonEncoder.withIndent('  ')
           .convert(jsonDecode(provider.serialiseBook(bookName)));
       final bytes = utf8.encode(json);
-      final fileName = '$bookName.json';
+      final now = DateTime.now();
+      final timestamp =
+          '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
+          '_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+      final fileName = '${bookName}_$timestamp.json';
 
       if (kIsWeb) {
         // Web: use FilePicker save dialog if available, else show error.
@@ -289,9 +304,9 @@ class _ImportScreenState extends State<ImportScreen> {
       }
 
       // Desktop/mobile: save to Downloads folder.
-      final home = Platform.environment['HOME']
-          ?? Platform.environment['USERPROFILE']
-          ?? '.';
+      final home = Platform.environment['HOME'] ??
+          Platform.environment['USERPROFILE'] ??
+          '.';
       final downloads = Directory('$home/Downloads');
       final dir = downloads.existsSync() ? downloads : Directory(home);
       final file = File('${dir.path}/$fileName');
@@ -299,7 +314,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
       setState(() => _loading = false);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Exported to ${file.path}'),
           duration: const Duration(seconds: 4),
@@ -322,6 +337,10 @@ class _ImportScreenState extends State<ImportScreen> {
       _loading = true;
       _error = null;
     });
+
+    // Capture context-dependent objects before the first await.
+    final provider = context.read<AppProvider>();
+    final messenger = ScaffoldMessenger.of(context);
 
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -353,7 +372,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
       if (!context.mounted) return;
 
-      final provider = context.read<AppProvider>();
       final bookName = provider.primaryBook?.name ?? defaultBookName;
 
       final contacts = await compute(
@@ -370,9 +388,9 @@ class _ImportScreenState extends State<ImportScreen> {
         return;
       }
 
-      final confirmed = await showDialog<_ImportResult>(
+      final confirmed = await showDialog<ImportResult>(
         context: context,
-        builder: (_) => _ImportConfirmDialog(
+        builder: (_) => ImportConfirmDialog(
           fileName: file.name,
           contacts: contacts,
           initialBook: bookName,
@@ -390,7 +408,7 @@ class _ImportScreenState extends State<ImportScreen> {
         // Persist to pod.
         final error = await provider.saveBookToPod(confirmed.bookName);
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               error != null
@@ -409,220 +427,5 @@ class _ImportScreenState extends State<ImportScreen> {
         _loading = false;
       });
     }
-  }
-}
-
-// ── Import result ─────────────────────────────────────────────────────────────
-
-class _ImportResult {
-  final String bookName;
-
-  const _ImportResult({required this.bookName});
-}
-
-// ── Confirmation dialog ───────────────────────────────────────────────────────
-
-class _ImportConfirmDialog extends StatefulWidget {
-  final String fileName;
-  final List<Contact> contacts;
-  final String initialBook;
-  final List<String> availableBooks;
-
-  const _ImportConfirmDialog({
-    required this.fileName,
-    required this.contacts,
-    required this.initialBook,
-    required this.availableBooks,
-  });
-
-  @override
-  State<_ImportConfirmDialog> createState() => _ImportConfirmDialogState();
-}
-
-class _ImportConfirmDialogState extends State<_ImportConfirmDialog> {
-  late String _selectedBook;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedBook = widget.initialBook;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final preview = widget.contacts.take(5).toList();
-    final remaining = widget.contacts.length - preview.length;
-
-    return AlertDialog(
-      title: const Text('Confirm import'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Found ${widget.contacts.length} contact'
-              '${widget.contacts.length == 1 ? '' : 's'} '
-              'in "${widget.fileName}".',
-            ),
-            const Gap(16),
-
-            // Book selector
-            if (widget.availableBooks.length > 1) ...[
-              Text(
-                'Import into:',
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-              ),
-              const Gap(8),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedBook,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: widget.availableBooks
-                    .map((b) => DropdownMenuItem(value: b, child: Text(b)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _selectedBook = v);
-                },
-              ),
-              const Gap(16),
-            ],
-
-            // Preview list
-            Text(
-              'Preview:',
-              style: TextStyle(
-                color: cs.onSurfaceVariant,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Gap(4),
-            ...preview.map(
-              (c) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    const Icon(Icons.person_outline, size: 14),
-                    const Gap(6),
-                    Expanded(
-                      child: Text(
-                        c.name,
-                        style: const TextStyle(fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (c.primaryEmail != null)
-                      Text(
-                        c.primaryEmail!,
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            if (remaining > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  '… and $remaining more.',
-                  style: TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(
-            _ImportResult(bookName: _selectedBook),
-          ),
-          child: const Text('Import'),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Import card ───────────────────────────────────────────────────────────────
-
-class _ImportCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool loading;
-  final VoidCallback onImport;
-
-  const _ImportCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.loading,
-    required this.onImport,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, size: 36, color: cs.primary),
-            const Gap(16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const Gap(4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Gap(16),
-            loading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : FilledButton.tonal(
-                    onPressed: onImport,
-                    child: const Text('Choose file'),
-                  ),
-          ],
-        ),
-      ),
-    );
   }
 }

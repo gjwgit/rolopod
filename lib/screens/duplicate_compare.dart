@@ -35,8 +35,7 @@ import 'package:rolopod/models/duplicate_detector.dart';
 
 // ── Tooltip constants ─────────────────────────────────────────────────────────
 
-const kScoreTooltip =
-    '**Similarity Score**\n\n'
+const kScoreTooltip = '**Similarity Score**\n\n'
     'The percentage shown is a *name similarity score* calculated using '
     '**Jaccard similarity on character bigrams**.\n\n'
     '**How it works:**\n'
@@ -51,8 +50,7 @@ const kScoreTooltip =
     'with the same name but different emails or phones will still score '
     '100%. Tap a pair to compare all fields side by side.';
 
-const kMergeTooltip =
-    '**Merge Contacts**\n\n'
+const kMergeTooltip = '**Merge Contacts**\n\n'
     'Merging combines the two contacts into one, keeping the **left contact '
     'as the primary** source of truth.\n\n'
     '**Field-by-field rules:**\n'
@@ -75,7 +73,7 @@ enum CompareAction { merge, dismiss }
 class ComparisonDialog extends StatelessWidget {
   final DuplicatePair pair;
 
-  const ComparisonDialog({required this.pair});
+  const ComparisonDialog({super.key, required this.pair});
 
   @override
   Widget build(BuildContext context) {
@@ -301,15 +299,27 @@ class _ContactCard extends StatelessWidget {
       rows.add(const Gap(4));
     }
 
-    void addList(String label, List<dynamic> items, String Function(dynamic) fn) {
+    void addList(
+      String label,
+      List<dynamic> items,
+      String Function(dynamic) fn,
+    ) {
       for (final item in items) {
         addRow(label, fn(item));
       }
     }
 
     addRow('Book', c.bookName);
-    addList('Email', c.emails, (e) => '${(e as ContactField).value} (${e.label})');
-    addList('Phone', c.phones, (e) => '${(e as ContactField).value} (${e.label})');
+    addList(
+      'Email',
+      c.emails,
+      (e) => '${(e as ContactField).value} (${e.label})',
+    );
+    addList(
+      'Phone',
+      c.phones,
+      (e) => '${(e as ContactField).value} (${e.label})',
+    );
     addList(
       'Address',
       c.addresses,

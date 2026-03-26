@@ -1,6 +1,6 @@
 /// DuplicatesScreen — find and merge duplicate contacts.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Tuesday 2026-03-24 08:17:30 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -28,10 +28,15 @@ library;
 import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
+import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
 
+import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/models/duplicate_detector.dart';
+import 'package:rolopod/screens/duplicate_compare.dart';
 import 'package:rolopod/services/app_provider.dart';
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 class DuplicatesScreen extends StatefulWidget {
   const DuplicatesScreen({super.key});
@@ -126,8 +131,10 @@ class _DuplicatesScreenState extends State<DuplicatesScreen> {
           child: Row(
             children: [
               Text(
-                '${pairs.length} potential duplicate${pairs.length == 1 ? '' : 's'}',
-                style: TextStyle(color: cs.onSurfaceVariant),
+                '${pairs.length} potential '
+                'duplicate${pairs.length == 1 ? '' : 's'} — '
+                'tap a pair to compare',
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
               ),
               const Spacer(),
               TextButton.icon(
@@ -144,35 +151,58 @@ class _DuplicatesScreenState extends State<DuplicatesScreen> {
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (_, i) => _DuplicateTile(
               pair: pairs[i],
-              onMerge: (pair) {
-                provider.mergeDuplicates(
-                  pair,
-                  targetBook: pair.a.bookName,
-                );
-                setState(() {
-                  _pairs = List.from(pairs)..removeAt(i);
-                });
-              },
-              onDismiss: () {
-                setState(() {
-                  _pairs = List.from(pairs)..removeAt(i);
-                });
-              },
+              onTap: () => _showComparison(context, pairs[i], i, provider),
+              onMerge: (pair) => _doMerge(pair, i, provider),
+              onDismiss: () => setState(() {
+                _pairs = List.from(pairs)..removeAt(i);
+              }),
             ),
           ),
         ),
       ],
     );
   }
+
+  void _doMerge(DuplicatePair pair, int i, AppProvider provider) {
+    provider.mergeDuplicates(pair, targetBook: pair.a.bookName);
+    provider.saveBookToPod(pair.a.bookName);
+    setState(() {
+      _pairs = List.from(_pairs!)..removeAt(i);
+    });
+  }
+
+  void _showComparison(
+    BuildContext context,
+    DuplicatePair pair,
+    int i,
+    AppProvider provider,
+  ) {
+    showDialog<CompareAction>(
+      context: context,
+      builder: (_) => ComparisonDialog(pair: pair),
+    ).then((action) {
+      if (!mounted) return;
+      if (action == CompareAction.merge) _doMerge(pair, i, provider);
+      if (action == CompareAction.dismiss) {
+        setState(() {
+          _pairs = List.from(_pairs!)..removeAt(i);
+        });
+      }
+    });
+  }
 }
+
+// ── Duplicate tile ────────────────────────────────────────────────────────────
 
 class _DuplicateTile extends StatelessWidget {
   final DuplicatePair pair;
+  final VoidCallback onTap;
   final ValueChanged<DuplicatePair> onMerge;
   final VoidCallback onDismiss;
 
   const _DuplicateTile({
     required this.pair,
+    required this.onTap,
     required this.onMerge,
     required this.onDismiss,
   });
@@ -182,60 +212,89 @@ class _DuplicateTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final pct = (pair.score * 100).round();
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _NameChip(
-                  name: pair.a.name,
-                  book: pair.a.bookName,
-                  cs: cs,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '$pct%',
-                  style: TextStyle(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _NameChip(
+                    name: pair.a.name,
+                    book: pair.a.bookName,
+                    cs: cs,
                   ),
                 ),
-              ),
-              Expanded(
-                child: _NameChip(
-                  name: pair.b.name,
-                  book: pair.b.bookName,
-                  cs: cs,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: MarkdownTooltip(
+                    message: kScoreTooltip,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$pct%',
+                        style: TextStyle(
+                          color: cs.onPrimaryContainer,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const Gap(8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: onDismiss,
-                child: const Text('Not a duplicate'),
-              ),
-              const Gap(8),
-              FilledButton.tonal(
-                onPressed: () => onMerge(pair),
-                child: const Text('Merge'),
-              ),
-            ],
-          ),
-        ],
+                Expanded(
+                  child: _NameChip(
+                    name: pair.b.name,
+                    book: pair.b.bookName,
+                    cs: cs,
+                  ),
+                ),
+              ],
+            ),
+            const Gap(8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'Tap to compare',
+                  style: TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: onDismiss,
+                  child: const Text('Not a duplicate'),
+                ),
+                const Gap(8),
+                MarkdownTooltip(
+                  message: kMergeTooltip,
+                  child: FilledButton.tonal(
+                    onPressed: () => onMerge(pair),
+                    child: const Text('Merge'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+// ── Name chip ─────────────────────────────────────────────────────────────────
 
 class _NameChip extends StatelessWidget {
   final String name;

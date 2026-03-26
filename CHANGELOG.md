@@ -59,6 +59,7 @@ sharing UI)
 
 ## 0.2 Basic Functionality
 
++ Be more informative with the deduplicate operatione [0.1.8 20260326 gjw]
 + Import and Export internal JSON format for backup [0.1.7 20260326 gjw]
 + Initial address book sharing functionality [0.1.6 20260326 gjw]
 + Prompt for the security key if it is not cached [0.1.5 20260324 gjw]

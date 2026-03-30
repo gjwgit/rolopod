@@ -59,6 +59,8 @@ sharing UI)
 
 ## 0.2 Basic Functionality
 
++ Bug - Can not delete Display Name [0.1.11 20260331 gjw]
++ Bug - delete phone retains old labels [0.1.10 20260331 gjw]
 + Cleanup and export with timestamp [0.1.9 20260326 gjw]
 + Be more informative with the deduplicate operation [0.1.8 20260326 gjw]
 + Import and Export internal JSON format for backup [0.1.7 20260326 gjw]

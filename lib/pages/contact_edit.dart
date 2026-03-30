@@ -536,41 +536,17 @@ class _ContactEditState extends State<ContactEdit> {
       children: [
         ...fields.asMap().entries.map(
               (e) => Padding(
+                key: ObjectKey(e.value),
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Label dropdown
+                    // Label — autocomplete with standard suggestions.
                     SizedBox(
                       width: 110,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: labelOptions.contains(e.value.label.text)
-                            ? e.value.label.text
-                            : labelOptions.first,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 14,
-                          ),
-                        ),
-                        items: labelOptions
-                            .map(
-                              (l) => DropdownMenuItem(
-                                value: l,
-                                child: Text(
-                                  l,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) {
-                            setState(() => e.value.label.text = v);
-                          }
-                        },
+                      child: LabelAutocomplete(
+                        controller: e.value.label,
+                        options: labelOptions,
                       ),
                     ),
                     const Gap(8),

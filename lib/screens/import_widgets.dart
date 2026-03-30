@@ -187,6 +187,7 @@ class ImportCard extends StatelessWidget {
   final String subtitle;
   final bool loading;
   final VoidCallback onImport;
+  final String buttonLabel;
 
   const ImportCard({
     super.key,
@@ -195,6 +196,7 @@ class ImportCard extends StatelessWidget {
     required this.subtitle,
     required this.loading,
     required this.onImport,
+    this.buttonLabel = 'Choose file',
   });
 
   @override
@@ -239,7 +241,7 @@ class ImportCard extends StatelessWidget {
                   )
                 : FilledButton.tonal(
                     onPressed: onImport,
-                    child: const Text('Choose file'),
+                    child: Text(buttonLabel),
                   ),
           ],
         ),

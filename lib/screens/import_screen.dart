@@ -160,6 +160,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     subtitle:
                         'Save ${book.name}_YYYYMMDD_HHMM.json to your Downloads folder.',
                     loading: _loading,
+                    buttonLabel: 'Save to File',
                     onImport: () => _exportBook(context, book.name),
                   ),
                 ),

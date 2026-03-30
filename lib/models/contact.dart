@@ -27,6 +27,13 @@ library;
 
 import 'package:uuid/uuid.dart';
 
+/// Sentinel so [Contact.copyWith] can distinguish "not provided" from `null`.
+const _unset = _Unset();
+
+class _Unset {
+  const _Unset();
+}
+
 /// A single contact entry across all address book formats.
 class Contact {
   /// Unique identifier (UUID).
@@ -118,42 +125,50 @@ class Contact {
 
   Contact copyWith({
     String? bookName,
-    String? firstName,
-    String? lastName,
-    String? displayName,
-    String? nickname,
-    String? organisation,
-    String? jobTitle,
+    Object? firstName = _unset,
+    Object? lastName = _unset,
+    Object? displayName = _unset,
+    Object? nickname = _unset,
+    Object? organisation = _unset,
+    Object? jobTitle = _unset,
     List<ContactField>? emails,
     List<ContactField>? phones,
     List<ContactAddress>? addresses,
     List<ContactField>? urls,
-    String? notes,
+    Object? notes = _unset,
     List<String>? tags,
-    DateTime? birthday,
-    String? gender,
-    String? spouseName,
+    Object? birthday = _unset,
+    Object? gender = _unset,
+    Object? spouseName = _unset,
     List<String>? children,
     DateTime? updatedAt,
   }) =>
       Contact(
         id: id,
         bookName: bookName ?? this.bookName,
-        firstName: firstName ?? this.firstName,
-        lastName: lastName ?? this.lastName,
-        displayName: displayName ?? this.displayName,
-        nickname: nickname ?? this.nickname,
-        organisation: organisation ?? this.organisation,
-        jobTitle: jobTitle ?? this.jobTitle,
+        firstName:
+            firstName == _unset ? this.firstName : firstName as String?,
+        lastName:
+            lastName == _unset ? this.lastName : lastName as String?,
+        displayName:
+            displayName == _unset ? this.displayName : displayName as String?,
+        nickname:
+            nickname == _unset ? this.nickname : nickname as String?,
+        organisation:
+            organisation == _unset ? this.organisation : organisation as String?,
+        jobTitle:
+            jobTitle == _unset ? this.jobTitle : jobTitle as String?,
         emails: emails ?? this.emails,
         phones: phones ?? this.phones,
         addresses: addresses ?? this.addresses,
         urls: urls ?? this.urls,
-        notes: notes ?? this.notes,
+        notes: notes == _unset ? this.notes : notes as String?,
         tags: tags ?? this.tags,
-        birthday: birthday ?? this.birthday,
-        gender: gender ?? this.gender,
-        spouseName: spouseName ?? this.spouseName,
+        birthday:
+            birthday == _unset ? this.birthday : birthday as DateTime?,
+        gender: gender == _unset ? this.gender : gender as String?,
+        spouseName:
+            spouseName == _unset ? this.spouseName : spouseName as String?,
         children: children ?? this.children,
         createdAt: createdAt,
         updatedAt: updatedAt ?? DateTime.now(),

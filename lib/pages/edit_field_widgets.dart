@@ -122,6 +122,92 @@ extension LabeledFieldListX on List<LabeledField> {
       .toList();
 }
 
+// ── Label with autocomplete (free-text with standard suggestions) ─────────
+
+/// A label editor that suggests [options] but accepts any typed value.
+class LabelAutocomplete extends StatelessWidget {
+  final TextEditingController controller;
+  final List<String> options;
+
+  const LabelAutocomplete({
+    super.key,
+    required this.controller,
+    required this.options,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Autocomplete<String>(
+      initialValue: controller.value,
+      optionsBuilder: (textEditingValue) {
+        final query = textEditingValue.text.toLowerCase();
+        if (query.isEmpty) return options;
+
+        return options
+            .where((o) => o.toLowerCase().contains(query))
+            .toList();
+      },
+      fieldViewBuilder: (context, fieldController, focusNode, onSubmitted) {
+        // Keep our backing controller in sync.
+
+        fieldController.addListener(() => controller.text = fieldController.text);
+
+        return TextField(
+          controller: fieldController,
+          focusNode: focusNode,
+          style: const TextStyle(fontSize: 13),
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 14,
+            ),
+            suffixIcon: Icon(
+              Icons.arrow_drop_down,
+              size: 18,
+              color: cs.onSurfaceVariant,
+            ),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 24,
+              minHeight: 0,
+            ),
+          ),
+          onSubmitted: (_) => onSubmitted(),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) => Align(
+        alignment: Alignment.topLeft,
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 200, maxWidth: 160),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              shrinkWrap: true,
+              itemCount: options.length,
+              itemBuilder: (context, index) {
+                final option = options.elementAt(index);
+
+                return ListTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  title: Text(option, style: const TextStyle(fontSize: 13)),
+                  onTap: () => onSelected(option),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      onSelected: (value) => controller.text = value,
+    );
+  }
+}
+
 // ── Address field group ───────────────────────────────────────────────────────
 
 class AddressField {

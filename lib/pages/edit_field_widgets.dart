@@ -145,14 +145,13 @@ class LabelAutocomplete extends StatelessWidget {
         final query = textEditingValue.text.toLowerCase();
         if (query.isEmpty) return options;
 
-        return options
-            .where((o) => o.toLowerCase().contains(query))
-            .toList();
+        return options.where((o) => o.toLowerCase().contains(query)).toList();
       },
       fieldViewBuilder: (context, fieldController, focusNode, onSubmitted) {
         // Keep our backing controller in sync.
 
-        fieldController.addListener(() => controller.text = fieldController.text);
+        fieldController
+            .addListener(() => controller.text = fieldController.text);
 
         return TextField(
           controller: fieldController,

@@ -146,26 +146,22 @@ class Contact {
       Contact(
         id: id,
         bookName: bookName ?? this.bookName,
-        firstName:
-            firstName == _unset ? this.firstName : firstName as String?,
-        lastName:
-            lastName == _unset ? this.lastName : lastName as String?,
+        firstName: firstName == _unset ? this.firstName : firstName as String?,
+        lastName: lastName == _unset ? this.lastName : lastName as String?,
         displayName:
             displayName == _unset ? this.displayName : displayName as String?,
-        nickname:
-            nickname == _unset ? this.nickname : nickname as String?,
-        organisation:
-            organisation == _unset ? this.organisation : organisation as String?,
-        jobTitle:
-            jobTitle == _unset ? this.jobTitle : jobTitle as String?,
+        nickname: nickname == _unset ? this.nickname : nickname as String?,
+        organisation: organisation == _unset
+            ? this.organisation
+            : organisation as String?,
+        jobTitle: jobTitle == _unset ? this.jobTitle : jobTitle as String?,
         emails: emails ?? this.emails,
         phones: phones ?? this.phones,
         addresses: addresses ?? this.addresses,
         urls: urls ?? this.urls,
         notes: notes == _unset ? this.notes : notes as String?,
         tags: tags ?? this.tags,
-        birthday:
-            birthday == _unset ? this.birthday : birthday as DateTime?,
+        birthday: birthday == _unset ? this.birthday : birthday as DateTime?,
         gender: gender == _unset ? this.gender : gender as String?,
         spouseName:
             spouseName == _unset ? this.spouseName : spouseName as String?,

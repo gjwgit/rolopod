@@ -70,6 +70,8 @@ class _ContactEditState extends State<ContactEdit> {
   late List<LabeledField> _urls;
   late List<AddressField> _addresses;
   late List<TextEditingController> _tags;
+  late List<FocusNode> _tagFocusNodes;
+  late List<FocusNode> _childFocusNodes;
 
   @override
   void initState() {
@@ -100,6 +102,8 @@ class _ContactEditState extends State<ContactEdit> {
     _addresses = c.addresses.map(AddressField.from).toList();
 
     _tags = c.tags.map((t) => TextEditingController(text: t)).toList();
+    _tagFocusNodes = List.generate(_tags.length, (_) => FocusNode());
+    _childFocusNodes = List.generate(_children.length, (_) => FocusNode());
   }
 
   @override
@@ -134,6 +138,12 @@ class _ContactEditState extends State<ContactEdit> {
     }
     for (final t in _tags) {
       t.dispose();
+    }
+    for (final n in _tagFocusNodes) {
+      n.dispose();
+    }
+    for (final n in _childFocusNodes) {
+      n.dispose();
     }
     super.dispose();
   }
@@ -312,9 +322,13 @@ class _ContactEditState extends State<ContactEdit> {
                       keyboard: TextInputType.emailAddress,
                       defaultLabel: 'email',
                       labelOptions: ['email', 'work', 'home', 'other'],
-                      onAdd: () => setState(
-                        () => _emails.add(LabeledField.empty('email')),
-                      ),
+                      onAdd: () {
+                        final field = LabeledField.empty('email');
+                        setState(() => _emails.add(field));
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => field.valueFocus.requestFocus(),
+                        );
+                      },
                       onRemove: (i) => setState(() {
                         _emails[i].dispose();
                         _emails.removeAt(i);
@@ -330,9 +344,13 @@ class _ContactEditState extends State<ContactEdit> {
                       keyboard: TextInputType.phone,
                       defaultLabel: 'mobile',
                       labelOptions: ['mobile', 'home', 'work', 'other'],
-                      onAdd: () => setState(
-                        () => _phones.add(LabeledField.empty('mobile')),
-                      ),
+                      onAdd: () {
+                        final field = LabeledField.empty('mobile');
+                        setState(() => _phones.add(field));
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => field.valueFocus.requestFocus(),
+                        );
+                      },
                       onRemove: (i) => setState(() {
                         _phones[i].dispose();
                         _phones.removeAt(i);
@@ -355,8 +373,13 @@ class _ContactEditState extends State<ContactEdit> {
                         ),
                     EditAddButton(
                       label: 'Add address',
-                      onPressed: () =>
-                          setState(() => _addresses.add(AddressField.empty())),
+                      onPressed: () {
+                        final field = AddressField.empty();
+                        setState(() => _addresses.add(field));
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => field.streetFocus.requestFocus(),
+                        );
+                      },
                     ),
                     const Gap(16),
                     editSectionLabel(context, 'Web'),
@@ -368,8 +391,13 @@ class _ContactEditState extends State<ContactEdit> {
                       keyboard: TextInputType.url,
                       defaultLabel: 'url',
                       labelOptions: ['url', 'work', 'home', 'other'],
-                      onAdd: () =>
-                          setState(() => _urls.add(LabeledField.empty('url'))),
+                      onAdd: () {
+                        final field = LabeledField.empty('url');
+                        setState(() => _urls.add(field));
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => field.valueFocus.requestFocus(),
+                        );
+                      },
                       onRemove: (i) => setState(() {
                         _urls[i].dispose();
                         _urls.removeAt(i);
@@ -458,6 +486,7 @@ class _ContactEditState extends State<ContactEdit> {
                                 Expanded(
                                   child: EditField(
                                     controller: e.value,
+                                    focusNode: _childFocusNodes[e.key],
                                     label: 'Child name',
                                   ),
                                 ),
@@ -467,6 +496,8 @@ class _ContactEditState extends State<ContactEdit> {
                                   onPressed: () => setState(() {
                                     _children[e.key].dispose();
                                     _children.removeAt(e.key);
+                                    _childFocusNodes[e.key].dispose();
+                                    _childFocusNodes.removeAt(e.key);
                                   }),
                                 ),
                               ],
@@ -475,9 +506,16 @@ class _ContactEditState extends State<ContactEdit> {
                         ),
                     EditAddButton(
                       label: 'Add child',
-                      onPressed: () => setState(
-                        () => _children.add(TextEditingController()),
-                      ),
+                      onPressed: () {
+                        final node = FocusNode();
+                        setState(() {
+                          _children.add(TextEditingController());
+                          _childFocusNodes.add(node);
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => node.requestFocus(),
+                        );
+                      },
                     ),
                     const Gap(16),
                     editSectionLabel(context, 'Tags'),
@@ -490,6 +528,7 @@ class _ContactEditState extends State<ContactEdit> {
                                 Expanded(
                                   child: EditField(
                                     controller: e.value,
+                                    focusNode: _tagFocusNodes[e.key],
                                     label: 'Tag',
                                   ),
                                 ),
@@ -499,6 +538,8 @@ class _ContactEditState extends State<ContactEdit> {
                                   onPressed: () => setState(() {
                                     _tags[e.key].dispose();
                                     _tags.removeAt(e.key);
+                                    _tagFocusNodes[e.key].dispose();
+                                    _tagFocusNodes.removeAt(e.key);
                                   }),
                                 ),
                               ],
@@ -507,9 +548,16 @@ class _ContactEditState extends State<ContactEdit> {
                         ),
                     EditAddButton(
                       label: 'Add tag',
-                      onPressed: () => setState(
-                        () => _tags.add(TextEditingController()),
-                      ),
+                      onPressed: () {
+                        final node = FocusNode();
+                        setState(() {
+                          _tags.add(TextEditingController());
+                          _tagFocusNodes.add(node);
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => node.requestFocus(),
+                        );
+                      },
                     ),
                     const Gap(16),
                     editSectionLabel(context, 'Notes'),
@@ -627,6 +675,7 @@ class _ContactEditState extends State<ContactEdit> {
                     Expanded(
                       child: TextField(
                         controller: e.value.value,
+                        focusNode: e.value.valueFocus,
                         keyboardType: keyboard,
                         decoration: InputDecoration(
                           hintText: valuePlaceholder,

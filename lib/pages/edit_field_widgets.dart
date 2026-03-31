@@ -71,16 +71,19 @@ class EditAddButton extends StatelessWidget {
 class EditField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
+  final FocusNode? focusNode;
 
   const EditField({
     super.key,
     required this.controller,
     required this.label,
+    this.focusNode,
   });
 
   @override
   Widget build(BuildContext context) => TextField(
         controller: controller,
+        focusNode: focusNode,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -94,10 +97,12 @@ class EditField extends StatelessWidget {
 class LabeledField {
   final TextEditingController label;
   final TextEditingController value;
+  final FocusNode valueFocus;
 
   LabeledField({required String label, required String value})
       : label = TextEditingController(text: label),
-        value = TextEditingController(text: value);
+        value = TextEditingController(text: value),
+        valueFocus = FocusNode();
 
   factory LabeledField.from(ContactField f) =>
       LabeledField(label: f.label, value: f.value);
@@ -108,6 +113,7 @@ class LabeledField {
   void dispose() {
     label.dispose();
     value.dispose();
+    valueFocus.dispose();
   }
 }
 
@@ -216,6 +222,7 @@ class AddressField {
   final TextEditingController state;
   final TextEditingController postcode;
   final TextEditingController country;
+  final FocusNode streetFocus;
 
   AddressField({
     required String label,
@@ -229,7 +236,8 @@ class AddressField {
         city = TextEditingController(text: city),
         state = TextEditingController(text: state),
         postcode = TextEditingController(text: postcode),
-        country = TextEditingController(text: country);
+        country = TextEditingController(text: country),
+        streetFocus = FocusNode();
 
   factory AddressField.from(ContactAddress a) => AddressField(
         label: a.label,
@@ -253,6 +261,7 @@ class AddressField {
     for (final c in [label, street, city, state, postcode, country]) {
       c.dispose();
     }
+    streetFocus.dispose();
   }
 }
 
@@ -338,6 +347,7 @@ class AddressEditor extends StatelessWidget {
           const Gap(8),
           TextField(
             controller: field.street,
+            focusNode: field.streetFocus,
             decoration: const InputDecoration(
               labelText: 'Street',
               border: OutlineInputBorder(),

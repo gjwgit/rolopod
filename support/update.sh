@@ -18,6 +18,7 @@ FILES=(
     support/flutter.mk  ${SCRIPTS}/../support/flutter.mk
     support/git.mk  ${SCRIPTS}/../support/git.mk
     support/loc.sh  ${SCRIPTS}/../support/loc.sh
+    support/meld_zip_from_claude.sh  ${SCRIPTS}/../support/meld_zip_from_claude.sh
     support/update.sh  ${SCRIPTS}/../support/update.sh
 )
 

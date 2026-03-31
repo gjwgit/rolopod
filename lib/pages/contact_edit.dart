@@ -58,6 +58,8 @@ class _ContactEditState extends State<ContactEdit> {
   late final TextEditingController _jobTitle;
   late final TextEditingController _notes;
   DateTime? _birthday;
+  DateTime? _updatedAt;
+  bool _updatedAtEdited = false;
   late TextEditingController _gender;
   late TextEditingController _spouse;
   late List<TextEditingController> _children;
@@ -81,6 +83,7 @@ class _ContactEditState extends State<ContactEdit> {
     _jobTitle = TextEditingController(text: c.jobTitle ?? '');
     _notes = TextEditingController(text: c.notes ?? '');
     _birthday = c.birthday;
+    _updatedAt = c.updatedAt;
     _gender = TextEditingController(text: c.gender ?? '');
     _spouse = TextEditingController(text: c.spouseName ?? '');
     _children =
@@ -163,7 +166,7 @@ class _ContactEditState extends State<ContactEdit> {
       urls: _urls.toFields(),
       addresses: _addresses.toAddresses(),
       tags: _tags.map((t) => t.text.trim()).where((t) => t.isNotEmpty).toList(),
-      updatedAt: DateTime.now(),
+      updatedAt: _updatedAtEdited ? _updatedAt : DateTime.now(),
     );
     final provider = context.read<AppProvider>();
     provider.upsertContact(updated);
@@ -184,6 +187,41 @@ class _ContactEditState extends State<ContactEdit> {
       helpText: 'Select birthday',
     );
     if (picked != null) setState(() => _birthday = picked);
+  }
+
+  // ── Updated-at picker (date + time) ───────────────────────────────────────
+
+  String _formatTimestamp(DateTime dt) {
+    final d = '${dt.day}/${dt.month}/${dt.year}';
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+
+    return '$d $h:$m';
+  }
+
+  Future<void> _pickUpdatedAt() async {
+    final now = DateTime.now();
+    final current = _updatedAt ?? now;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(2000),
+      lastDate: now,
+      helpText: 'Select date',
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+      helpText: 'Select time',
+    );
+    if (time == null) return;
+
+    setState(() {
+      _updatedAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _updatedAtEdited = true;
+    });
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -488,6 +526,40 @@ class _ContactEditState extends State<ContactEdit> {
                         hintText: '**bold**, *italic*, - bullet lists…',
                       ),
                     ),
+                    const Gap(16),
+                    editSectionLabel(context, 'Last Updated'),
+                    const Gap(8),
+                    InkWell(
+                      onTap: _pickUpdatedAt,
+                      borderRadius: BorderRadius.circular(4),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.edit_calendar, size: 18),
+                        ),
+                        child: Text(
+                          _updatedAt != null
+                              ? _formatTimestamp(_updatedAt!)
+                              : 'Set on save',
+                          style: TextStyle(
+                            color: _updatedAt != null
+                                ? cs.onSurface
+                                : cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_updatedAtEdited)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => setState(() {
+                            _updatedAt = widget.contact.updatedAt;
+                            _updatedAtEdited = false;
+                          }),
+                          child: const Text('Reset'),
+                        ),
+                      ),
                     const Gap(8),
                   ],
                 ),

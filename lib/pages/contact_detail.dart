@@ -338,6 +338,15 @@ class _ContactDetailState extends State<ContactDetail> {
                       ),
                       const Gap(4),
                     ],
+                    if (contact.updatedAt != null) ...[
+                      const Gap(8),
+                      DetailInfoRow(
+                        icon: Icons.update,
+                        label: 'Last updated',
+                        value: _formatTimestamp(contact.updatedAt!),
+                        cs: cs,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -374,6 +383,14 @@ class _ContactDetailState extends State<ContactDetail> {
         ),
       ),
     );
+  }
+
+  String _formatTimestamp(DateTime dt) {
+    final d = '${dt.day}/${dt.month}/${dt.year}';
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+
+    return '$d $h:$m';
   }
 
   void _confirmDelete(BuildContext context) {

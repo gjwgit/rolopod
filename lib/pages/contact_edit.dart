@@ -219,7 +219,8 @@ class _ContactEditState extends State<ContactEdit> {
     if (time == null) return;
 
     setState(() {
-      _updatedAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _updatedAt =
+          DateTime(date.year, date.month, date.day, time.hour, time.minute);
       _updatedAtEdited = true;
     });
   }

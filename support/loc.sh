@@ -94,11 +94,15 @@ done
 
 # Read .locignore patterns into an array
 
+if [ -e .locignore ]; then
+
 declare -a IGNORE_PATTERNS
 while IFS= read -r pattern; do
     [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
     IGNORE_PATTERNS+=("$pattern")
 done < .locignore
+
+fi
 
 # Filter FILES array
 

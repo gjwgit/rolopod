@@ -11,10 +11,10 @@
 [![GitHub Issues](https://img.shields.io/github/issues/gjwgit/rolopod)](https://github.com/gjwgit/rolopod/issues)
 
 [Rolopod](https://gjwgit.github.io/rolopod/) is a tool to collect your
-Hyundai vehicle data together in one secure and private place. You can
-selectively share any parts of your data with others. The app itself
-presents the data and analyses of the data. It is being developed by
-[Togaware](https://togaware.com) and pair programmed by [Graham
+contacts into an address book in one secure and private place. You can
+selectively share any parts of your address book with others. The app
+is being developed by [Togaware](https://togaware.com) and pair
+programmed by [Graham
 Williams](https://togaware.com/Graham.Williams.html) and [Claude
 Code](https://claude.com/product/claude-code).
 
@@ -61,35 +61,3 @@ a Pull Request. The app is implemented in
 ## Introduction
 
 A Flutter app to manage address books.
-
-## Android Network Config
-
-Add to `android/app/src/main/AndroidManifest.xml` inside `<application>`:
-
-```xml
-android:usesCleartextTraffic="true"
-android:networkSecurityConfig="@xml/network_security_config"
-```
-
-And create `android/app/src/main/res/xml/network_security_config.xml`:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">au-apigw.ccs.hyundai.com.au</domain>
-    </domain-config>
-</network-security-config>
-```
-
-## iOS
-
-Add to `ios/Runner/Info.plist`:
-
-```xml
-<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-</dict>
-```

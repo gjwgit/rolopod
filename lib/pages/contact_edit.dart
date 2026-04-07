@@ -517,40 +517,38 @@ class _ContactEditState extends State<ContactEdit> {
                     editSectionLabel(context, 'Tags'),
                     const Gap(8),
                     ..._tags.asMap().entries.map(
-                          (e) {
-                            final isNewLast = _focusNewTag &&
-                                e.key == _tags.length - 1;
-                            if (isNewLast) {
-                              _focusNewTag = false;
-                            }
+                      (e) {
+                        final isNewLast =
+                            _focusNewTag && e.key == _tags.length - 1;
+                        if (isNewLast) {
+                          _focusNewTag = false;
+                        }
 
-                            return Padding(
-                              key: ObjectKey(e.value),
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: LabelAutocomplete(
-                                      controller: e.value,
-                                      options: context
-                                          .read<AppProvider>()
-                                          .allTags,
-                                      autofocus: isNewLast,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline),
-                                    color: cs.error,
-                                    onPressed: () => setState(() {
-                                      _tags[e.key].dispose();
-                                      _tags.removeAt(e.key);
-                                    }),
-                                  ),
-                                ],
+                        return Padding(
+                          key: ObjectKey(e.value),
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: LabelAutocomplete(
+                                  controller: e.value,
+                                  options: context.read<AppProvider>().allTags,
+                                  autofocus: isNewLast,
+                                ),
                               ),
-                            );
-                          },
-                        ),
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: cs.error,
+                                onPressed: () => setState(() {
+                                  _tags[e.key].dispose();
+                                  _tags.removeAt(e.key);
+                                }),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                     EditAddButton(
                       label: 'Add tag',
                       onPressed: () {

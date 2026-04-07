@@ -86,6 +86,14 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  /// All unique tags across every contact in all books, sorted.
+  List<String> get allTags => _contactsByBook.values
+      .expand((contacts) => contacts)
+      .expand((c) => c.tags)
+      .toSet()
+      .toList()
+    ..sort();
+
   /// The primary (default) address book.
   AddressBook? get primaryBook => _books.isEmpty
       ? null

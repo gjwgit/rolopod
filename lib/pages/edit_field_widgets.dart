@@ -134,11 +134,13 @@ extension LabeledFieldListX on List<LabeledField> {
 class LabelAutocomplete extends StatelessWidget {
   final TextEditingController controller;
   final List<String> options;
+  final bool autofocus;
 
   const LabelAutocomplete({
     super.key,
     required this.controller,
     required this.options,
+    this.autofocus = false,
   });
 
   @override
@@ -162,6 +164,7 @@ class LabelAutocomplete extends StatelessWidget {
         return TextField(
           controller: fieldController,
           focusNode: focusNode,
+          autofocus: autofocus,
           style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
             border: const OutlineInputBorder(),

@@ -70,8 +70,8 @@ class _ContactEditState extends State<ContactEdit> {
   late List<LabeledField> _urls;
   late List<AddressField> _addresses;
   late List<TextEditingController> _tags;
-  late List<FocusNode> _tagFocusNodes;
   late List<FocusNode> _childFocusNodes;
+  bool _focusNewTag = false;
 
   @override
   void initState() {
@@ -102,7 +102,6 @@ class _ContactEditState extends State<ContactEdit> {
     _addresses = c.addresses.map(AddressField.from).toList();
 
     _tags = c.tags.map((t) => TextEditingController(text: t)).toList();
-    _tagFocusNodes = List.generate(_tags.length, (_) => FocusNode());
     _childFocusNodes = List.generate(_children.length, (_) => FocusNode());
   }
 
@@ -138,9 +137,6 @@ class _ContactEditState extends State<ContactEdit> {
     }
     for (final t in _tags) {
       t.dispose();
-    }
-    for (final n in _tagFocusNodes) {
-      n.dispose();
     }
     for (final n in _childFocusNodes) {
       n.dispose();
@@ -521,42 +517,47 @@ class _ContactEditState extends State<ContactEdit> {
                     editSectionLabel(context, 'Tags'),
                     const Gap(8),
                     ..._tags.asMap().entries.map(
-                          (e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: EditField(
-                                    controller: e.value,
-                                    focusNode: _tagFocusNodes[e.key],
-                                    label: 'Tag',
+                          (e) {
+                            final isNewLast = _focusNewTag &&
+                                e.key == _tags.length - 1;
+                            if (isNewLast) {
+                              _focusNewTag = false;
+                            }
+
+                            return Padding(
+                              key: ObjectKey(e.value),
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: LabelAutocomplete(
+                                      controller: e.value,
+                                      options: context
+                                          .read<AppProvider>()
+                                          .allTags,
+                                      autofocus: isNewLast,
+                                    ),
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                  color: cs.error,
-                                  onPressed: () => setState(() {
-                                    _tags[e.key].dispose();
-                                    _tags.removeAt(e.key);
-                                    _tagFocusNodes[e.key].dispose();
-                                    _tagFocusNodes.removeAt(e.key);
-                                  }),
-                                ),
-                              ],
-                            ),
-                          ),
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline),
+                                    color: cs.error,
+                                    onPressed: () => setState(() {
+                                      _tags[e.key].dispose();
+                                      _tags.removeAt(e.key);
+                                    }),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                     EditAddButton(
                       label: 'Add tag',
                       onPressed: () {
-                        final node = FocusNode();
                         setState(() {
                           _tags.add(TextEditingController());
-                          _tagFocusNodes.add(node);
+                          _focusNewTag = true;
                         });
-                        WidgetsBinding.instance.addPostFrameCallback(
-                          (_) => node.requestFocus(),
-                        );
                       },
                     ),
                     const Gap(16),

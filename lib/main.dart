@@ -49,8 +49,25 @@ void main() {
   );
 }
 
-class RoloPodApp extends StatelessWidget {
+class RoloPodApp extends StatefulWidget {
   const RoloPodApp({super.key});
+
+  @override
+  State<RoloPodApp> createState() => _RoloPodAppState();
+}
+
+class _RoloPodAppState extends State<RoloPodApp> {
+  @override
+  void initState() {
+    super.initState();
+    _initTheme();
+    solidThemeNotifier.addListener(() => setState(() {}));
+  }
+
+  Future<void> _initTheme() async {
+    await solidThemeNotifier.initialize();
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +77,14 @@ class RoloPodApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2A6478)),
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2A6478),
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: solidThemeNotifier.themeMode,
       home: SolidLogin(
         required: false,
         title: 'RoloPod'.toUpperCase().replaceAll(' - ', '\n'),

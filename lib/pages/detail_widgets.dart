@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_detail.dart';
@@ -41,11 +42,17 @@ class DetailSection extends StatelessWidget {
   final String label;
   final List<ContactField> fields;
 
+  /// Optional callback invoked when a field value is tapped.
+  /// Receives the field value string (e.g. a phone number or URL).
+
+  final void Function(String value)? onFieldTap;
+
   const DetailSection({
     super.key,
     required this.icon,
     required this.label,
     required this.fields,
+    this.onFieldTap,
   });
 
   @override
@@ -73,23 +80,37 @@ class DetailSection extends StatelessWidget {
               ...fields.map(
                 (f) => Padding(
                   padding: const EdgeInsets.only(bottom: 2),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          f.value,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
-                      if (f.label.isNotEmpty)
-                        Text(
-                          f.label,
-                          style: TextStyle(
-                            color: cs.onSurfaceVariant,
-                            fontSize: 11,
+                  child: InkWell(
+                    onTap: onFieldTap != null
+                        ? () => onFieldTap!(f.value)
+                        : null,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            f.value,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: onFieldTap != null
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                              decoration: onFieldTap != null
+                                  ? TextDecoration.underline
+                                  : null,
+                            ),
                           ),
                         ),
-                    ],
+                        if (f.label.isNotEmpty)
+                          Text(
+                            f.label,
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

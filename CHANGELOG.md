@@ -59,6 +59,7 @@ sharing UI)
 
 ## 0.2 Basic Functionality
 
++ Support tap of tel number to call tel: [0.1.16 20260410 gjw]
 + Support dark/light theme [0.1.15 20260410 gjw]
 + Auto complete tags based on current tags [0.1.14 20260407 gjw]
 + ADD TAG focus to the new TAG text field [0.1.13 20260331 gjw]

@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_edit.dart';
@@ -180,6 +181,11 @@ class _ContactDetailState extends State<ContactDetail> {
                         icon: Icons.phone_outlined,
                         label: 'Phone',
                         fields: contact.phones,
+                        onFieldTap: (number) {
+                          final digits =
+                              number.replaceAll(RegExp(r'[^\d+]'), '');
+                          launchUrl(Uri(scheme: 'tel', path: digits));
+                        },
                       ),
                       const Gap(12),
                     ],

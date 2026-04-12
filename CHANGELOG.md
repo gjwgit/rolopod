@@ -59,6 +59,7 @@ sharing UI)
 
 ## 0.2 Basic Functionality
 
++ Ensure popups don't dismiss without save [0.1.17 20260412 gjw]
 + Support tap of tel number to call tel: [0.1.16 20260410 gjw]
 + Support dark/light theme [0.1.15 20260410 gjw]
 + Auto complete tags based on current tags [0.1.14 20260407 gjw]

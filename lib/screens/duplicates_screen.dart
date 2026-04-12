@@ -178,6 +178,7 @@ class _DuplicatesScreenState extends State<DuplicatesScreen> {
   ) {
     showDialog<CompareAction>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => ComparisonDialog(pair: pair),
     ).then((action) {
       if (!mounted) return;

@@ -79,6 +79,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
     final bookName = provider.primaryBook?.name ?? defaultBookName;
     showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => ContactEdit(
         contact: Contact(bookName: bookName),
         isNew: true,

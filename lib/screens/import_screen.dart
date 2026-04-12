@@ -236,6 +236,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
       final confirmed = await showDialog<ImportResult>(
         context: context,
+        barrierDismissible: false,
         builder: (_) => ImportConfirmDialog(
           fileName: file.name,
           contacts: contacts,
@@ -391,6 +392,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
       final confirmed = await showDialog<ImportResult>(
         context: context,
+        barrierDismissible: false,
         builder: (_) => ImportConfirmDialog(
           fileName: file.name,
           contacts: contacts,

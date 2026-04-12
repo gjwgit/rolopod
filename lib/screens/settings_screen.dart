@@ -94,6 +94,7 @@ class SettingsScreen extends StatelessWidget {
     final controller = TextEditingController();
     showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: const Text('New address book'),
         content: TextField(

@@ -29,7 +29,6 @@ import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_detail.dart';
@@ -81,9 +80,8 @@ class DetailSection extends StatelessWidget {
                 (f) => Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child: InkWell(
-                    onTap: onFieldTap != null
-                        ? () => onFieldTap!(f.value)
-                        : null,
+                    onTap:
+                        onFieldTap != null ? () => onFieldTap!(f.value) : null,
                     borderRadius: BorderRadius.circular(4),
                     child: Row(
                       children: [

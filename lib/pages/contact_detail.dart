@@ -61,6 +61,7 @@ class _ContactDetailState extends State<ContactDetail> {
   Future<void> _openEdit(BuildContext context) async {
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => ContactEdit(contact: _contact),
     );
     // Refresh from provider in case the contact was updated.

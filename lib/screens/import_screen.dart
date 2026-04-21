@@ -1,6 +1,6 @@
 /// ImportScreen — import contacts from BBDB or vCard files.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Tuesday 2026-04-21 14:20:32 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -183,7 +183,7 @@ class _ImportScreenState extends State<ImportScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         dialogTitle: 'Select RoloPod JSON backup',
         type: FileType.custom,
         allowedExtensions: ['json'],
@@ -345,7 +345,7 @@ class _ImportScreenState extends State<ImportScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         dialogTitle: switch (format) {
           _ImportFormat.bbdb => 'Select BBDB file',
           _ImportFormat.vcard => 'Select vCard file',

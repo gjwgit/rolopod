@@ -133,10 +133,10 @@ packages:
     dependency: transitive
     description:
       name: crypto_keys
-      sha256: "2ed305a11a3e5d16dd7f489121c956fd19b9816938bb68bc7ed3a379827a304e"
+      sha256: "6e473fff865ec757174dcc585d6eaa7f5f40bf3cb58f444ec5ab4a01e9083cf9"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.0+2"
+    version: "0.3.1"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -149,10 +149,10 @@ packages:
     dependency: transitive
     description:
       name: dart_jsonwebtoken
-      sha256: cb79ed79baa02b4f59a597bf365873cbd83f9bb15273d63f7803802d21717c7d
+      sha256: ad84e60181696513d04d5f2078e0bbc20365b911f46f647797317414bdc88fbe
       url: "https://pub.dev"
     source: hosted
-    version: "3.4.0"
+    version: "3.4.1"
   dbus:
     dependency: transitive
     description:
@@ -197,10 +197,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "57d9a1dd5063f85fa3107fb42d1faffda52fdc948cefd5fe5ea85267a5fc7343"
+      sha256: f13a03000d942e476bc1ff0a736d2e9de711d2f89a95cd4c1d88f861c3348387
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.10"
+    version: "11.0.2"
   fixnum:
     dependency: transitive
     description:
@@ -801,26 +801,26 @@ packages:
     dependency: transitive
     description:
       name: solid_auth
-      sha256: "57091f4e48843bb40d6e27d384548dbee8aab017ba3d3aff0ea9f925d0b62ff9"
+      sha256: f8669ec441ef7662edabfe8a592dafb6997fddcebdd6470a31c86271415be264
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.28"
+    version: "0.1.29"
   solidpod:
     dependency: "direct main"
     description:
       name: solidpod
-      sha256: eb2eb1eb15513d0f54370058c4b5c996f2950773e62e0be9e7cf4ba209273352
+      sha256: "90ec5c104fdd19d231676ebbba65455704a6b9ebb492ac6e27f4872d79d51559"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.2"
+    version: "0.12.4"
   solidui:
     dependency: "direct main"
     description:
       name: solidui
-      sha256: be695a963899c3707bcf4a931ae8b40b680529b3b034b6bace734bcd2989c7cd
+      sha256: e2ac63d918b6969d4e3c4f2ed0ef053fa78eabca46a071a32723ab0d2bc67bbe
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.18"
+    version: "0.3.21"
   source_span:
     dependency: transitive
     description:

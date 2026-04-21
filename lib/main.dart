@@ -41,9 +41,21 @@ void main() {
 
   SolidSecurityKeyCentralManager.instance;
 
+  // Create the AppProvider up-front so we can wire it into the solidui
+  // logout flow and ensure in-memory contact data is cleared whenever a
+  // user logs out.
+
+  final appProvider = AppProvider();
+
+  SolidAuthHandler.instance.configure(
+    SolidAuthConfig(
+      onLogout: appProvider.reset,
+    ),
+  );
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppProvider(),
+    ChangeNotifierProvider<AppProvider>.value(
+      value: appProvider,
       child: const RoloPodApp(),
     ),
   );

@@ -236,6 +236,10 @@ class AppProvider extends ChangeNotifier {
 
   /// Load all address books listed on the pod into memory.
   Future<void> loadAllBooksFromPod() async {
+    // Reset in-memory state so stale data from a previous login does not
+    // bleed into the new session.
+    _resetInMemoryState();
+
     _state = AppState.loading;
     notifyListeners();
 
@@ -271,6 +275,30 @@ class AppProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// Clear all in-memory state and restore the default Personal book.
+  void reset() {
+    _resetInMemoryState();
+    _state = AppState.idle;
+    _errorMessage = null;
+    _searchPattern = '';
+    notifyListeners();
+  }
+
+  /// Internal helper that wipes loaded contacts and books, leaving only the
+  /// default Personal book placeholder.
+  void _resetInMemoryState() {
+    _contactsByBook.clear();
+    _books
+      ..clear()
+      ..add(
+        AddressBook(
+          name: defaultBookName,
+          podPath: '$podBooksPath/$defaultBookName.json',
+          ownerWebId: '',
+        ),
+      );
   }
 
   /// Save all books to the pod (e.g. after import or edit).

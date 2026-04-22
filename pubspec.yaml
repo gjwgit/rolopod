@@ -10,16 +10,16 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  gap: ^3.0.1
-  provider: ^6.1.5
-  markdown_tooltip: ^0.0.10
-  solidpod: ^0.12.2
-  solidui: ^0.3.18
-  flutter_markdown_plus: any
-  uuid: any
   file_picker: any
-
+  flutter_markdown_plus: any
+  gap: ^3.0.1
+  markdown_tooltip: ^0.0.10
+  provider: ^6.1.5
+  solidpod: ^0.12.4
+  solidui: ^0.3.21
   url_launcher: any
+  uuid: any
+
 dependency_overrides:
   intl: ^0.20.2
   solidui:

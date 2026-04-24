@@ -178,7 +178,7 @@ void _manageSharing(BuildContext context, AddressBook book) {
     context,
     MaterialPageRoute<void>(
       builder: (_) => GrantPermissionUi(
-        resourceName: '${book.name}.ttl',
+        resourceNames: ['${book.name}.ttl'],
         child: const _ReturnPage(),
       ),
     ),

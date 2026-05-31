@@ -1,6 +1,6 @@
 /// RoloPod — privacy-first address book with Solid Pod storage.
 ///
-// Time-stamp: <Monday 2026-03-23 06:29:29 +1100 Graham Williams>
+// Time-stamp: <Sunday 2026-05-31 08:55:56 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -103,6 +103,13 @@ class _RoloPodAppState extends State<RoloPodApp> {
         image: const AssetImage('assets/images/app_image.jpg'),
         logo: const AssetImage('assets/images/app_icon.png'),
         link: 'https://github.com/gjwgit/rolopod',
+        clientId:
+            'https://solidcommunity.au/apps/rolopod/client-profile.jsonld',
+        redirectUris: [
+          'http://localhost:4400/redirect',
+          'com.togaware.rolopod://redirect',
+          'https://solidcommunity.au/apps/rolopod/redirect.html',
+        ],
         child: const AppScaffold(),
       ),
     );

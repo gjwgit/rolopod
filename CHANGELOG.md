@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Add ABOUT text [1.0.4 20260614 gjw]
 + Format markdown NOTES in PDF. Use emacs_widget edit [1.0.3 20260614 gjw]
 + Add PDF view/print support [1.0.2 20260614 gjw]
 + Add a HOME page and reorgnise BACKUP [1.0.1 20260614 gjw]

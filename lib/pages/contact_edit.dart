@@ -164,7 +164,7 @@ class _ContactEditState extends State<ContactEdit> {
       f.city,
       f.state,
       f.postcode,
-      f.country
+      f.country,
     ]) {
       c.addListener(_markDirty);
     }

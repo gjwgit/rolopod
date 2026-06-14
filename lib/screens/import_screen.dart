@@ -26,7 +26,6 @@
 library;
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +38,7 @@ import 'package:provider/provider.dart';
 import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/models/contact_parser.dart';
+import 'package:rolopod/screens/import_export_io.dart';
 import 'package:rolopod/screens/import_widgets.dart';
 import 'package:rolopod/services/app_provider.dart';
 
@@ -188,7 +188,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     label: const Text('Export Backup'),
                     onPressed: (_loading || selected == null)
                         ? null
-                        : () => _exportBook(context, selected),
+                        : () => _export(context, selected, ExportFormat.json),
                   ),
                 ),
                 MarkdownTooltip(
@@ -232,10 +232,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     label: const Text('Export to BBDB'),
                     onPressed: (_loading || selected == null)
                         ? null
-                        : () => _exportFormat(
+                        : () => _export(
                               context,
                               selected,
-                              _ImportFormat.bbdb,
+                              ExportFormat.bbdb,
                             ),
                   ),
                 ),
@@ -251,10 +251,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     label: const Text('Export to vCard'),
                     onPressed: (_loading || selected == null)
                         ? null
-                        : () => _exportFormat(
+                        : () => _export(
                               context,
                               selected,
-                              _ImportFormat.vcard,
+                              ExportFormat.vcard,
                             ),
                   ),
                 ),
@@ -418,71 +418,10 @@ class _ImportScreenState extends State<ImportScreen> {
 
   // ── JSON export ────────────────────────────────────────────────────────────
 
-  Future<void> _exportBook(BuildContext context, String bookName) async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    // Capture context-dependent objects before the first await.
-    final provider = context.read<AppProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-
-    try {
-      final json = const JsonEncoder.withIndent('  ')
-          .convert(jsonDecode(provider.serialiseBook(bookName)));
-      final bytes = utf8.encode(json);
-      final now = DateTime.now();
-      final timestamp =
-          '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
-          '_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-      final fileName = 'rolopod_${bookName}_$timestamp.json';
-
-      // Prompt for where to save the backup.
-      final savePath = await FilePicker.saveFile(
-        dialogTitle: 'Save JSON Backup',
-        fileName: fileName,
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-        bytes: kIsWeb ? bytes : null,
-      );
-
-      // User cancelled the save dialog.
-      if (savePath == null) {
-        setState(() => _loading = false);
-        return;
-      }
-
-      // On web the bytes are written by the browser via the save dialog; on
-      // desktop/mobile write them to the chosen path.
-      if (!kIsWeb) {
-        await File(savePath).writeAsBytes(bytes);
-      }
-
-      setState(() => _loading = false);
-      if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Exported to $savePath'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } catch (e, st) {
-      debugPrint('[Export] error: $e\n$st');
-      setState(() {
-        _error = 'Export failed: $e';
-        _loading = false;
-      });
-    }
-  }
-
-  // ── BBDB / vCard export ──────────────────────────────────────────────────
-
-  /// Export [bookName] to a BBDB or vCard file, prompting for the location.
-  Future<void> _exportFormat(
+  Future<void> _export(
     BuildContext context,
     String bookName,
-    _ImportFormat format,
+    ExportFormat format,
   ) async {
     setState(() {
       _loading = true;
@@ -493,57 +432,31 @@ class _ImportScreenState extends State<ImportScreen> {
     final provider = context.read<AppProvider>();
     final messenger = ScaffoldMessenger.of(context);
 
-    try {
-      // serialiseBook returns the book's contacts as a JSON list; decode them
-      // back into Contact objects to feed the format serialisers.
-      final decoded = jsonDecode(provider.serialiseBook(bookName)) as List;
-      final contacts = decoded
-          .map((j) => Contact.fromJson(j as Map<String, dynamic>))
-          .toList();
+    final result = exportBytes(provider.serialiseBook(bookName), format);
+    final title = format == ExportFormat.json
+        ? 'Save JSON Backup'
+        : 'Save ${result.ext.toUpperCase()} Export';
+    final savePath = await savePickedBytes(
+      bytes: result.bytes,
+      fileName: timestampedName(bookName, result.ext),
+      ext: result.ext,
+      dialogTitle: title,
+    );
 
-      final ext = format == _ImportFormat.bbdb ? 'bbdb' : 'vcf';
-      final content =
-          format == _ImportFormat.bbdb ? toBbdb(contacts) : toVcard(contacts);
-      final bytes = utf8.encode(content);
+    if (!mounted) return;
+    setState(() => _loading = false);
 
-      final now = DateTime.now();
-      final timestamp =
-          '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
-          '_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-      final fileName = 'rolopod_${bookName}_$timestamp.$ext';
-
-      final savePath = await FilePicker.saveFile(
-        dialogTitle: 'Save ${ext.toUpperCase()} Export',
-        fileName: fileName,
-        type: FileType.custom,
-        allowedExtensions: [ext],
-        bytes: kIsWeb ? bytes : null,
-      );
-
-      if (savePath == null) {
-        setState(() => _loading = false);
-        return;
-      }
-
-      if (!kIsWeb) {
-        await File(savePath).writeAsBytes(bytes);
-      }
-
-      setState(() => _loading = false);
-      if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Exported to $savePath'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } catch (e, st) {
-      debugPrint('[Export] format error: $e\n$st');
-      setState(() {
-        _error = 'Export failed: $e';
-        _loading = false;
-      });
+    if (savePath == null) return; // cancelled
+    if (savePath.startsWith('error:')) {
+      setState(() => _error = savePath.substring(6));
+      return;
     }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Exported to $savePath'),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   Future<void> _pickAndImport(

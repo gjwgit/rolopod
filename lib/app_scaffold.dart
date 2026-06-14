@@ -83,6 +83,36 @@ class _AppScaffoldState extends State<AppScaffold> {
       showLogout: false,
       showLogin: false,
       themeToggle: const SolidThemeToggleConfig(enabled: true),
+      aboutConfig: SolidAboutConfig(
+        applicationName: appName,
+        applicationIcon: Image.asset(
+          'assets/images/app_icon.png',
+          width: 64,
+          height: 64,
+        ),
+        applicationLegalese: '''
+
+        © 2026 Togaware Pty Ltd
+
+        ''',
+        text: '''
+
+        RoloPod is a private contact manager that lets you keep your address
+        books — contacts, phone numbers, emails, addresses and notes — stored
+        securely and privately on your personal online data store (Pod) hosted
+        on a Solid server.
+
+        Import from Emacs BBDB or vCard files, find and merge duplicates, share
+        address books with other Pod owners, and export your contacts as JSON,
+        BBDB, vCard or PDF.
+
+        For more information, visit the
+        [RoloPod](https://github.com/gjwgit/rolopod) GitHub repository and our
+        [Australian Solid Community](https://solidcommunity.au) web site.
+
+        ''',
+        readmeUrl: 'https://gjwgit.github.io/rolopod',
+      ),
       appBar: const SolidAppBarConfig(
         title: appName,
         versionConfig: SolidVersionConfig(

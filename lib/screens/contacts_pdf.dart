@@ -214,7 +214,8 @@ List<pw.TextSpan> _inlineSpans(String text, {pw.TextStyle? base}) {
   for (final m in re.allMatches(text)) {
     if (m.start > index) {
       spans.add(
-          pw.TextSpan(text: text.substring(index, m.start), style: baseStyle));
+        pw.TextSpan(text: text.substring(index, m.start), style: baseStyle),
+      );
     }
     if (m.group(2) != null) {
       spans.add(

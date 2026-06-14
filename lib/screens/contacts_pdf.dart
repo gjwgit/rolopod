@@ -111,7 +111,7 @@ List<pw.Widget> _contactBlock(Contact c) {
     lines.add(_detail(u.value));
   }
   if (c.notes != null && c.notes!.isNotEmpty) {
-    lines.add(_detail(c.notes!));
+    lines.addAll(_markdownToPdf(c.notes!));
   }
   if (c.tags.isNotEmpty) {
     lines.add(_detail('tags: ${c.tags.join(', ')}'));
@@ -134,6 +134,117 @@ pw.Widget _detail(String text) => pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 2),
       child: pw.Text(text, style: const pw.TextStyle(fontSize: 10)),
     );
+
+// ── Markdown → PDF ──────────────────────────────────────────────────────────
+
+/// Render a (best-effort) subset of Markdown to PDF widgets: headings,
+/// unordered bullet lists, blank-line paragraph breaks, and inline emphasis
+/// (`**bold**`, `*italic*` / `_italic_`).
+List<pw.Widget> _markdownToPdf(String md) {
+  final widgets = <pw.Widget>[];
+  for (final raw in md.split('\n')) {
+    final line = raw.trimRight();
+    if (line.trim().isEmpty) {
+      widgets.add(pw.SizedBox(height: 4));
+      continue;
+    }
+
+    // Headings: #, ##, ### …
+    final heading = RegExp(r'^(#{1,6})\s+(.*)$').firstMatch(line.trimLeft());
+    if (heading != null) {
+      final level = heading.group(1)!.length;
+      widgets.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 2, bottom: 2),
+          child: pw.RichText(
+            text: pw.TextSpan(
+              children: _inlineSpans(
+                heading.group(2)!,
+                base: pw.TextStyle(
+                  fontSize: (15 - level).clamp(10, 14).toDouble(),
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      continue;
+    }
+
+    // Unordered list items: -, * or +.
+    final bullet = RegExp(r'^\s*[-*+]\s+(.*)$').firstMatch(line);
+    if (bullet != null) {
+      widgets.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(left: 8, bottom: 2),
+          child: pw.RichText(
+            text: pw.TextSpan(
+              children: [
+                const pw.TextSpan(text: '• '),
+                ..._inlineSpans(bullet.group(1)!),
+              ],
+            ),
+          ),
+        ),
+      );
+      continue;
+    }
+
+    // Plain paragraph line.
+    widgets.add(
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 2),
+        child: pw.RichText(
+          text: pw.TextSpan(children: _inlineSpans(line)),
+        ),
+      ),
+    );
+  }
+  return widgets;
+}
+
+/// Convert inline Markdown emphasis in [text] into styled [pw.TextSpan]s.
+List<pw.TextSpan> _inlineSpans(String text, {pw.TextStyle? base}) {
+  final baseStyle = base ?? const pw.TextStyle(fontSize: 10);
+  final spans = <pw.TextSpan>[];
+  // Matches **bold**, *italic* or _italic_.
+  final re = RegExp(r'(\*\*(.+?)\*\*)|(\*(.+?)\*)|(_(.+?)_)');
+  var index = 0;
+  for (final m in re.allMatches(text)) {
+    if (m.start > index) {
+      spans.add(
+          pw.TextSpan(text: text.substring(index, m.start), style: baseStyle));
+    }
+    if (m.group(2) != null) {
+      spans.add(
+        pw.TextSpan(
+          text: m.group(2),
+          style: baseStyle.copyWith(fontWeight: pw.FontWeight.bold),
+        ),
+      );
+    } else if (m.group(4) != null) {
+      spans.add(
+        pw.TextSpan(
+          text: m.group(4),
+          style: baseStyle.copyWith(fontStyle: pw.FontStyle.italic),
+        ),
+      );
+    } else if (m.group(6) != null) {
+      spans.add(
+        pw.TextSpan(
+          text: m.group(6),
+          style: baseStyle.copyWith(fontStyle: pw.FontStyle.italic),
+        ),
+      );
+    }
+    index = m.end;
+  }
+  if (index < text.length) {
+    spans.add(pw.TextSpan(text: text.substring(index), style: baseStyle));
+  }
+  return spans;
+}
 
 /// Prompt for a filename/location and write the PDF [bytes] there.
 ///

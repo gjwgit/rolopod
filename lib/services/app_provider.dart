@@ -66,6 +66,10 @@ class AppProvider extends ChangeNotifier {
   List<AddressBook> get books => List.unmodifiable(_books);
   String get searchPattern => _searchPattern;
 
+  /// Number of contacts in [bookName] (0 if the book is unknown).
+  int contactCountForBook(String bookName) =>
+      _contactsByBook[bookName]?.length ?? 0;
+
   /// Contacts from all currently visible books, sorted by name.
   List<Contact> get visibleContacts {
     final visible = _books.where((b) => b.isVisible).map((b) => b.name).toSet();

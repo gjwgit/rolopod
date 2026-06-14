@@ -31,6 +31,7 @@ import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
+import 'package:rolopod/home.dart';
 import 'package:rolopod/screens/contacts_screen.dart';
 import 'package:rolopod/screens/duplicates_screen.dart';
 import 'package:rolopod/screens/import_screen.dart';
@@ -89,34 +90,40 @@ class _AppScaffoldState extends State<AppScaffold> {
               'https://github.com/gjwgit/rolopod/blob/dev/CHANGELOG.md',
         ),
       ),
-      menu: const [
-        SolidMenuItem(
+      menu: [
+        const SolidMenuItem(
+          title: 'Home',
+          icon: Icons.home,
+          tooltip: '**Home**\n\nWelcome page with an overview of RoloPod.',
+          child: Home(title: appName),
+        ),
+        const SolidMenuItem(
           title: 'Contacts',
           icon: Icons.contacts,
           tooltip: '**Contacts**\n\nBrowse and search all your address books.',
           child: ContactsScreen(),
         ),
-        SolidMenuItem(
-          title: 'Import / Export',
-          icon: Icons.import_export,
-          tooltip: '**Import / Export**\n\n'
-              'Import contacts from BBDB or vCard files, '
-              'or export a backup as JSON.',
-          child: ImportScreen(),
-        ),
-        SolidMenuItem(
+        const SolidMenuItem(
           title: 'Duplicates',
           icon: Icons.content_copy,
           tooltip: '**Duplicates**\n\n'
               'Find and merge duplicate contacts across your address books.',
           child: DuplicatesScreen(),
         ),
-        SolidMenuItem(
+        const SolidMenuItem(
           title: 'Settings',
           icon: Icons.settings,
           tooltip: '**Settings**\n\n'
               'Manage address books, sharing and app preferences.',
           child: SettingsScreen(),
+        ),
+        const SolidMenuItem(
+          title: 'Backup',
+          icon: Icons.save_alt,
+          tooltip: '**Backup**\n\n'
+              'Back up and restore your contacts, or import from '
+              'BBDB or vCard files.',
+          child: ImportScreen(),
         ),
       ],
       statusBar: SolidStatusBarConfig(

@@ -58,6 +58,66 @@ List<Contact> parseVcard(String content, {required String bookName}) {
   return contacts;
 }
 
+// ── Export ──────────────────────────────────────────────────────────────────
+
+/// Escape a value for inclusion in a vCard field.
+String _vEncode(String s) => s
+    .replaceAll('\\', r'\\')
+    .replaceAll('\n', r'\n')
+    .replaceAll(',', r'\,')
+    .replaceAll(';', r'\;');
+
+/// Serialise [contacts] to a vCard 3.0 document.
+String toVcard(List<Contact> contacts) {
+  final buf = StringBuffer();
+  for (final c in contacts) {
+    buf.writeln('BEGIN:VCARD');
+    buf.writeln('VERSION:3.0');
+    buf.writeln(
+      'N:${_vEncode(c.lastName ?? '')};${_vEncode(c.firstName ?? '')};;;',
+    );
+    buf.writeln('FN:${_vEncode(c.displayName ?? c.name)}');
+    if (c.nickname != null && c.nickname!.isNotEmpty) {
+      buf.writeln('NICKNAME:${_vEncode(c.nickname!)}');
+    }
+    if (c.organisation != null && c.organisation!.isNotEmpty) {
+      buf.writeln('ORG:${_vEncode(c.organisation!)}');
+    }
+    if (c.jobTitle != null && c.jobTitle!.isNotEmpty) {
+      buf.writeln('TITLE:${_vEncode(c.jobTitle!)}');
+    }
+    for (final e in c.emails) {
+      buf.writeln('EMAIL;TYPE=${e.label}:${e.value}');
+    }
+    for (final p in c.phones) {
+      buf.writeln('TEL;TYPE=${p.label}:${p.value}');
+    }
+    for (final a in c.addresses) {
+      buf.writeln(
+        'ADR;TYPE=${a.label}:;;${_vEncode(a.street ?? '')};'
+        '${_vEncode(a.city ?? '')};${_vEncode(a.state ?? '')};'
+        '${_vEncode(a.postcode ?? '')};${_vEncode(a.country ?? '')}',
+      );
+    }
+    for (final u in c.urls) {
+      buf.writeln('URL:${u.value}');
+    }
+    if (c.birthday != null) {
+      buf.writeln(
+        'BDAY:${c.birthday!.toIso8601String().substring(0, 10)}',
+      );
+    }
+    if (c.notes != null && c.notes!.isNotEmpty) {
+      buf.writeln('NOTE:${_vEncode(c.notes!)}');
+    }
+    if (c.tags.isNotEmpty) {
+      buf.writeln('CATEGORIES:${c.tags.join(',')}');
+    }
+    buf.writeln('END:VCARD');
+  }
+  return buf.toString();
+}
+
 Contact? _parseVcardBlock(String block, {required String bookName}) {
   final unfolded = block.replaceAll(RegExp(r'\r?\n[ \t]'), '');
   final lines = unfolded.split(RegExp(r'\r?\n'));

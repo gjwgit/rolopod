@@ -137,6 +137,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.0"
+  cryptography_plus:
+    dependency: transitive
+    description:
+      name: cryptography_plus
+      sha256: edf96fc96518368b11bb1ba33b515f59aa5a55b0aa7533c0e1813399cf81130e
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -876,10 +884,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: a2c49fc1fed7140cadd892d765bd47edbe4ac0b9c7e7e3c493dcb58126f99cf0
+      sha256: "93ae5884a9df5d3bb696825bceb3a17590754548b5d740eba51500afc8d088f5"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.25"
+    version: "2.4.26"
   shared_preferences_foundation:
     dependency: transitive
     description:
@@ -928,30 +936,27 @@ packages:
   solid_auth:
     dependency: transitive
     description:
-      path: "."
-      ref: "av/session-persistence"
-      resolved-ref: "89569c7364ed57406f854cd257a2e397e9ae4fd3"
-      url: "https://github.com/anusii/solid_auth.git"
-    source: git
-    version: "0.2.0"
+      name: solid_auth
+      sha256: acf69d8ba204e04d660c11dea6313a090f3294b370c72edb1dfbffa05f1a4c89
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   solidpod:
     dependency: "direct main"
     description:
-      path: "."
-      ref: dev
-      resolved-ref: "197bc1e1e2d5e1ef997d0d4e5531eb4b0b0cfb88"
-      url: "https://github.com/anusii/solidpod.git"
-    source: git
-    version: "0.12.10"
+      name: solidpod
+      sha256: "9dd8fa0aaafac70071d18c072a156e1909290cf1e21085a98e58b2b3b56b16cc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.6"
   solidui:
     dependency: "direct main"
     description:
-      path: "."
-      ref: dev
-      resolved-ref: "70f84b084dbf0a73ceaa762c414425423634c26c"
-      url: "https://github.com/anusii/solidui.git"
-    source: git
-    version: "0.3.57"
+      name: solidui
+      sha256: b0036d94fa157aa84617e45e2733c60501f5e0e483734e32aaa99920850c80b5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.8"
   source_span:
     dependency: transitive
     description:
@@ -1100,10 +1105,10 @@ packages:
     dependency: transitive
     description:
       name: window_to_front
-      sha256: "7aef379752b7190c10479e12b5fd7c0b9d92adc96817d9e96c59937929512aee"
+      sha256: "14fad8984db4415e2eeb30b04bb77140b180e260d6cb66b26de126a8657a9241"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "0.0.4"
   x509_plus:
     dependency: transitive
     description:

@@ -281,6 +281,35 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// A stable content signature of all in-memory contacts across every book,
+  /// used to detect whether a reload from the Pod actually changed anything.
+  /// Includes the book name with each book's serialised contacts, and is sorted
+  /// so book/contact ordering alone is not reported as a change.
+  String _contactsSignature() {
+    final entries = _contactsByBook.keys.map((name) {
+      final contacts = List<Contact>.from(_contactsByBook[name] ?? []);
+      final items = contacts.map((c) => jsonEncode(c.toJson())).toList()
+        ..sort();
+      return '$name\u0002${items.join('\u0001')}';
+    }).toList()
+      ..sort();
+    return entries.join('\u0003');
+  }
+
+  /// Reloads all address books from the Pod, replacing the in-memory data, and
+  /// reports whether the Pod copy differed from what was held in memory.
+  ///
+  /// Returns true if the reload changed the data (the Pod was updated by
+  /// another instance/app), false if the data was already up to date.
+  ///
+  /// Reusable "refresh from Pod" pattern: snapshot a signature, reload, compare.
+  Future<bool> refreshFromPod() async {
+    final before = _contactsSignature();
+    await loadAllBooksFromPod();
+    final after = _contactsSignature();
+    return before != after;
+  }
+
   /// Clear all in-memory state and restore the default Personal book.
   void reset() {
     _resetInMemoryState();

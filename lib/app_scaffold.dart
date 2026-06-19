@@ -37,6 +37,7 @@ import 'package:rolopod/screens/duplicates_screen.dart';
 import 'package:rolopod/screens/import_screen.dart';
 import 'package:rolopod/screens/settings_screen.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/widgets/pod_refresh_action.dart';
 
 class AppScaffold extends StatefulWidget {
   const AppScaffold({super.key});
@@ -113,12 +114,18 @@ class _AppScaffoldState extends State<AppScaffold> {
         ''',
         readmeUrl: 'https://gjwgit.github.io/rolopod',
       ),
-      appBar: const SolidAppBarConfig(
+      appBar: SolidAppBarConfig(
         title: appName,
-        versionConfig: SolidVersionConfig(
+        versionConfig: const SolidVersionConfig(
           changelogUrl:
               'https://github.com/gjwgit/rolopod/blob/dev/CHANGELOG.md',
         ),
+        actions: [
+          buildPodRefreshAction(
+            context: context,
+            onRefresh: context.read<AppProvider>().refreshFromPod,
+          ),
+        ],
       ),
       menu: [
         const SolidMenuItem(

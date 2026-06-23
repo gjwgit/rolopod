@@ -31,7 +31,6 @@ import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
-import 'package:rolopod/home.dart';
 import 'package:rolopod/screens/contacts_screen.dart';
 import 'package:rolopod/screens/duplicates_screen.dart';
 import 'package:rolopod/screens/import_screen.dart';
@@ -98,14 +97,23 @@ class _AppScaffoldState extends State<AppScaffold> {
         ''',
         text: '''
 
-        RoloPod is a private contact manager that lets you keep your address
-        books — contacts, phone numbers, emails, addresses and notes — stored
-        securely and privately on your personal online data store (Pod) hosted
-        on a Solid server.
+        RoloPod is a private contact manager that stores your address books —
+        contacts, phone numbers, emails, addresses and notes — encrypted in
+        your personal Solid Pod, so your data stays under your control. Your
+        Solid Pod can be hosted on any Solid server and being encrypted it is
+        protected against casual access by anyone, including the server
+        administrators.
 
-        Import from Emacs BBDB or vCard files, find and merge duplicates, share
-        address books with other Pod owners, and export your contacts as JSON,
-        BBDB, vCard or PDF.
+        ### Key features
+
+        - Browse and search across multiple address books
+        - Import from Emacs BBDB or vCard files
+        - Find and merge duplicate contacts
+        - Backup and restore your contacts as JSON
+        - Share address books with other Pod owners
+        - Export contacts as JSON, BBDB, vCard or PDF
+        - Security key management for encrypted data
+        - Theme switching (light / dark / system)
 
         For more information, visit the
         [RoloPod](https://github.com/gjwgit/rolopod) GitHub repository and our
@@ -128,12 +136,6 @@ class _AppScaffoldState extends State<AppScaffold> {
         ],
       ),
       menu: [
-        const SolidMenuItem(
-          title: 'Home',
-          icon: Icons.home,
-          tooltip: '**Home**\n\nWelcome page with an overview of RoloPod.',
-          child: Home(title: appName),
-        ),
         const SolidMenuItem(
           title: 'Contacts',
           icon: Icons.contacts,

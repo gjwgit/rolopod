@@ -1,6 +1,6 @@
 /// AppScaffold — main SolidScaffold with left nav for RoloPod.
 ///
-// Time-stamp: <Tuesday 2026-03-24 17:03:49 +1100 Graham Williams>
+// Time-stamp: <Sunday 2026-06-28 09:03:47 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -31,6 +31,7 @@ import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
+import 'package:rolopod/screens/birthday_calendar_screen.dart';
 import 'package:rolopod/screens/contacts_screen.dart';
 import 'package:rolopod/screens/duplicates_screen.dart';
 import 'package:rolopod/screens/import_screen.dart';
@@ -143,6 +144,13 @@ class _AppScaffoldState extends State<AppScaffold> {
           child: ContactsScreen(),
         ),
         const SolidMenuItem(
+          title: 'Birthdays',
+          icon: Icons.cake,
+          tooltip: '**Birthdays**\n\nA month calendar with your contacts'
+              ' birthdays marked.',
+          child: BirthdayCalendarScreen(),
+        ),
+        const SolidMenuItem(
           title: 'Duplicates',
           icon: Icons.content_copy,
           tooltip: '**Duplicates**\n\n'
@@ -150,9 +158,9 @@ class _AppScaffoldState extends State<AppScaffold> {
           child: DuplicatesScreen(),
         ),
         const SolidMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          tooltip: '**Settings**\n\n'
+          title: 'Books',
+          icon: Icons.library_books,
+          tooltip: '**Books**\n\n'
               'Manage address books, sharing and app preferences.',
           child: SettingsScreen(),
         ),

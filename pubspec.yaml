@@ -1,7 +1,7 @@
 name: rolopod
 description: Privacy-first address book app with Solid Pod storage.
 publish_to: none
-version: 1.0.6+1
+version: 1.0.7+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -16,8 +16,8 @@ dependencies:
   gap: ^3.0.1
   markdown_tooltip: ^0.0.10
   provider: ^6.1.5
-  solidpod: ^1.0.6
-  solidui: ^1.0.8
+  solidpod: ^1.0.10
+  solidui: ^1.0.14
   url_launcher: any
   uuid: any
 

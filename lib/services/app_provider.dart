@@ -37,9 +37,17 @@ import 'package:rolopod/services/pod_service.dart';
 
 enum AppState { idle, loading, loaded, error }
 
+/// Phases of app startup, used to show phase-aware busy feedback while the Pod
+/// is unlocked (security key) and the address books are loaded.
+enum StartupPhase { idle, unlocking, loading, ready }
+
 class AppProvider extends ChangeNotifier {
   AppState _state = AppState.idle;
   String? _errorMessage;
+
+  // Startup progress, so the UI can show phase-aware busy feedback while the
+  // Pod is unlocked (security key) and the address books are loaded.
+  StartupPhase _startupPhase = StartupPhase.idle;
 
   /// All address books (owned + shared with me).
   final List<AddressBook> _books = [];
@@ -65,6 +73,18 @@ class AppProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<AddressBook> get books => List.unmodifiable(_books);
   String get searchPattern => _searchPattern;
+
+  StartupPhase get startupPhase => _startupPhase;
+
+  /// True while unlocking the Pod or loading data at startup.
+  bool get isStartingUp =>
+      _startupPhase == StartupPhase.unlocking ||
+      _startupPhase == StartupPhase.loading;
+
+  void setStartupPhase(StartupPhase phase) {
+    _startupPhase = phase;
+    notifyListeners();
+  }
 
   /// Number of contacts in [bookName] (0 if the book is unknown).
   int contactCountForBook(String bookName) =>

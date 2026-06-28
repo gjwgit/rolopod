@@ -113,7 +113,7 @@ class _BirthdayCalendarScreenState extends State<BirthdayCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
-    final byDay = _birthdaysForMonth(provider.visibleContacts);
+    final byDay = _birthdaysForMonth(provider.visibleContactsUnfiltered);
 
     return SizedBox.expand(
       child: SingleChildScrollView(

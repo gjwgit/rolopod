@@ -212,7 +212,7 @@ class _ContactEditState extends State<ContactEdit> {
 
   // ── Save ───────────────────────────────────────────────────────────────────
 
-  void _save(BuildContext context) {
+  Future<void> _save(BuildContext context) async {
     String? clean(TextEditingController c) {
       final v = c.text.trim();
       return v.isEmpty ? null : v;
@@ -241,9 +241,10 @@ class _ContactEditState extends State<ContactEdit> {
       updatedAt: _updatedAtEdited ? _updatedAt : DateTime.now(),
     );
     final provider = context.read<AppProvider>();
-    provider.upsertContact(updated);
+    await provider.upsertContact(updated);
     // Persist to pod in background — don't block the UI.
-    provider.saveBookToPod(updated.bookName);
+    await provider.saveBookToPod(updated.bookName);
+    if (!context.mounted) return;
     Navigator.of(context).pop();
   }
 

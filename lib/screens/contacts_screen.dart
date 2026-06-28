@@ -51,6 +51,15 @@ class _ContactsScreenState extends State<ContactsScreen> {
   bool _regexError = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Reflect any search filter still held by the provider so the box and the
+    // active filter stay in sync when returning to this screen.
+    final pattern = context.read<AppProvider>().searchPattern;
+    if (pattern.isNotEmpty) _searchController.text = pattern;
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

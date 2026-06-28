@@ -175,8 +175,13 @@ class PodService {
         name: 'PodService',
       );
       return [];
-    } catch (_) {
-      return [];
+    } catch (e, st) {
+      // A genuine read error (network, decode). Rethrow so callers that must
+      // not clobber the index (e.g. _addToIndex) can bail out rather than
+      // overwrite a good index with a truncated one.
+      debugPrint('[Pod] _readIndex error: $e\n$st');
+      dev.log('[Pod] _readIndex error: $e', name: 'PodService');
+      rethrow;
     }
   }
 
@@ -187,7 +192,18 @@ class PodService {
   }
 
   static Future<void> _addToIndex(String bookName) async {
-    final index = await _readIndex();
+    // If the index cannot be read reliably, do NOT write — overwriting with a
+    // truncated list would make other books vanish until the next full reload.
+    final List<String> index;
+    try {
+      index = await _readIndex();
+    } catch (_) {
+      dev.log(
+        '[Pod] Skipping index update for "$bookName" — index unreadable.',
+        name: 'PodService',
+      );
+      return;
+    }
     if (!index.contains(bookName)) {
       index.add(bookName);
       index.sort();

@@ -1,6 +1,6 @@
 /// AppScaffold — main SolidScaffold with left nav for RoloPod.
 ///
-// Time-stamp: <Tuesday 2026-03-24 17:03:49 +1100 Graham Williams>
+// Time-stamp: <Sunday 2026-06-28 11:49:45 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -175,9 +175,9 @@ class _AppScaffoldState extends State<AppScaffold> {
           child: _withStartupOverlay(const DuplicatesScreen()),
         ),
         SolidMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          tooltip: '**Settings**\n\n'
+          title: 'Books',
+          icon: Icons.library_books,
+          tooltip: '**Books**\n\n'
               'Manage address books, sharing and app preferences.',
           child: _withStartupOverlay(const SettingsScreen()),
         ),

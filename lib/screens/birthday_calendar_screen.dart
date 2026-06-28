@@ -285,13 +285,10 @@ class _BirthdayCalendarScreenState extends State<BirthdayCalendarScreen> {
   String _ageText(DateTime birthday) {
     final hasYear = birthday.year > 1900;
     if (!hasYear) return 'Birthday';
-    final now = DateTime.now();
-    var age = now.year - birthday.year;
-    final hadBirthday = now.month > birthday.month ||
-        (now.month == birthday.month && now.day >= birthday.day);
-    if (!hadBirthday) age -= 1;
-    final turning = age + 1;
-    return 'Turning $turning this year';
+    // The age they turn on this birthday is simply the calendar year being
+    // viewed minus their birth year.
+    final turning = _month.year - birthday.year;
+    return 'Turning $turning';
   }
 
   String _monthName(int m) => const [

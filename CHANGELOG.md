@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Bug fix age calculation [1.0.8 20260628 gjw]
 + Add CALENDAR [1.0.7 20260628 gjw]
 + Update ABOUT [1.0.6 20260623 gjw]
 + Add a REFRESH button [1.0.5 20260619 gjw]

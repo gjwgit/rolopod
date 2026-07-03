@@ -953,18 +953,18 @@ packages:
     dependency: "direct main"
     description:
       name: solidpod
-      sha256: f053325b1472f784f1faad383427d512f36d25565d11aa62d24e4343cdd329b2
+      sha256: "86fe853892033352be6ef70ace97ad910274be8ba31474fd172a22c16783d065"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.11"
+    version: "1.0.13"
   solidui:
     dependency: "direct main"
     description:
       name: solidui
-      sha256: "8cfa247ba031ec622b972e9ae1aeabbe74c6c88c30c70a1d294ab8e5114fa9d4"
+      sha256: ca4288bcc1269a64e20a6fb907595ef91dfa6b480914286a7a7b59a3277a554e
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.14"
+    version: "1.0.18"
   source_span:
     dependency: transitive
     description:

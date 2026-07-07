@@ -37,9 +37,17 @@ import 'package:rolopod/services/pod_service.dart';
 
 enum AppState { idle, loading, loaded, error }
 
+/// Phases of app startup, used to show phase-aware busy feedback while the Pod
+/// is unlocked (security key) and the address books are loaded.
+enum StartupPhase { idle, unlocking, loading, ready }
+
 class AppProvider extends ChangeNotifier {
   AppState _state = AppState.idle;
   String? _errorMessage;
+
+  // Startup progress, so the UI can show phase-aware busy feedback while the
+  // Pod is unlocked (security key) and the address books are loaded.
+  StartupPhase _startupPhase = StartupPhase.idle;
 
   /// All address books (owned + shared with me).
   final List<AddressBook> _books = [];
@@ -66,14 +74,37 @@ class AppProvider extends ChangeNotifier {
   List<AddressBook> get books => List.unmodifiable(_books);
   String get searchPattern => _searchPattern;
 
+  StartupPhase get startupPhase => _startupPhase;
+
+  /// True while unlocking the Pod or loading data at startup.
+  bool get isStartingUp =>
+      _startupPhase == StartupPhase.unlocking ||
+      _startupPhase == StartupPhase.loading;
+
+  void setStartupPhase(StartupPhase phase) {
+    _startupPhase = phase;
+    notifyListeners();
+  }
+
+  /// Number of contacts in [bookName] (0 if the book is unknown).
+  int contactCountForBook(String bookName) =>
+      _contactsByBook[bookName]?.length ?? 0;
+
   /// Contacts from all currently visible books, sorted by name.
-  List<Contact> get visibleContacts {
+  /// Contacts from all visible books, without applying the Contacts-screen
+  /// search pattern. Use this where the search box should not affect the view
+  /// (e.g. the birthday calendar).
+  List<Contact> get visibleContactsUnfiltered {
     final visible = _books.where((b) => b.isVisible).map((b) => b.name).toSet();
-    final all = _contactsByBook.entries
+    return _contactsByBook.entries
         .where((e) => visible.contains(e.key))
         .expand((e) => e.value)
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  List<Contact> get visibleContacts {
+    final all = visibleContactsUnfiltered;
 
     if (_searchPattern.isEmpty) return all;
 
@@ -153,7 +184,25 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// Add or update a contact.
-  void upsertContact(Contact contact) {
+  Future<void> upsertContact(Contact contact) async {
+    // Safety net: if this book has no contacts in memory yet (e.g. it was
+    // never loaded, or state was reset), pull it from the Pod first so we are
+    // appending to the full list rather than starting a new one-entry list
+    // that would later overwrite everything on the Pod.
+    if ((_contactsByBook[contact.bookName] ?? const []).isEmpty) {
+      try {
+        final json = await PodService.loadBook(contact.bookName);
+        if (json != null) {
+          final list = jsonDecode(json) as List;
+          _contactsByBook[contact.bookName] = list
+              .map((j) => Contact.fromJson(j as Map<String, dynamic>))
+              .toList();
+        }
+      } catch (e, st) {
+        debugPrint('[AppProvider] upsert preload error: $e\n$st');
+      }
+    }
+
     final list = _contactsByBook.putIfAbsent(contact.bookName, () => []);
     final idx = list.indexWhere((c) => c.id == contact.id);
     if (idx >= 0) {
@@ -236,31 +285,74 @@ class AppProvider extends ChangeNotifier {
 
   /// Load all address books listed on the pod into memory.
   Future<void> loadAllBooksFromPod() async {
+    // Remember the books we already knew about so a stale or incomplete
+    // index.ttl on the Pod cannot make existing books disappear mid-session.
+    final knownNames = _books.map((b) => b.name).toSet();
+
     _state = AppState.loading;
     notifyListeners();
 
     try {
       final bookNames = await PodService.listBooks();
 
-      // Always ensure Personal exists locally even if not yet on pod.
-      if (!bookNames.contains(defaultBookName)) {
-        bookNames.insert(0, defaultBookName);
-      }
+      // Merge the index with any books we already had loaded, plus Personal.
+      final nameSet = <String>{...bookNames, ...knownNames, defaultBookName};
+      final orderedNames = nameSet.toList()..sort();
 
-      for (final name in bookNames) {
-        // Ensure book is registered locally.
-        if (!_books.any((b) => b.name == name)) {
-          _books.add(
-            AddressBook(
+      // Load everything into a temporary map first. We only replace the live
+      // in-memory data once the whole reload has succeeded, so a partial or
+      // failed reload can never leave the app showing fewer contacts than it
+      // already had.
+      final loaded = <String, List<Contact>>{};
+      final loadedBooks = <AddressBook>[];
+
+      for (final name in orderedNames) {
+        loadedBooks.add(
+          // Preserve the existing book (and its visibility) if we have it.
+          _books.firstWhere(
+            (b) => b.name == name,
+            orElse: () => AddressBook(
               name: name,
               podPath: 'rolopod/data/$name.ttl',
               ownerWebId: '',
             ),
-          );
-        }
-        // Load contacts from pod.
+          ),
+        );
         final json = await PodService.loadBook(name);
-        if (json != null) deserialiseBook(name, json);
+        if (json != null) {
+          try {
+            final list = jsonDecode(json) as List;
+            loaded[name] = list
+                .map((j) => Contact.fromJson(j as Map<String, dynamic>))
+                .toList();
+          } catch (e, st) {
+            debugPrint('[AppProvider] parse error for "$name": $e\n$st');
+            // Keep any previously held contacts for this book on parse error.
+            if (_contactsByBook[name] != null) {
+              loaded[name] = List<Contact>.from(_contactsByBook[name]!);
+            }
+          }
+        } else if (_contactsByBook[name] != null) {
+          // No data returned (e.g. transient miss) — keep what we had.
+          loaded[name] = List<Contact>.from(_contactsByBook[name]!);
+        }
+      }
+
+      // Commit the freshly loaded data atomically.
+      _contactsByBook
+        ..clear()
+        ..addAll(loaded);
+      _books
+        ..clear()
+        ..addAll(loadedBooks);
+      if (!_books.any((b) => b.name == defaultBookName)) {
+        _books.add(
+          AddressBook(
+            name: defaultBookName,
+            podPath: '$podBooksPath/$defaultBookName.json',
+            ownerWebId: '',
+          ),
+        );
       }
 
       _state = AppState.loaded;
@@ -271,6 +363,59 @@ class AppProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// A stable content signature of all in-memory contacts across every book,
+  /// used to detect whether a reload from the Pod actually changed anything.
+  /// Includes the book name with each book's serialised contacts, and is sorted
+  /// so book/contact ordering alone is not reported as a change.
+  String _contactsSignature() {
+    final entries = _contactsByBook.keys.map((name) {
+      final contacts = List<Contact>.from(_contactsByBook[name] ?? []);
+      final items = contacts.map((c) => jsonEncode(c.toJson())).toList()
+        ..sort();
+      return '$name\u0002${items.join('\u0001')}';
+    }).toList()
+      ..sort();
+    return entries.join('\u0003');
+  }
+
+  /// Reloads all address books from the Pod, replacing the in-memory data, and
+  /// reports whether the Pod copy differed from what was held in memory.
+  ///
+  /// Returns true if the reload changed the data (the Pod was updated by
+  /// another instance/app), false if the data was already up to date.
+  ///
+  /// Reusable "refresh from Pod" pattern: snapshot a signature, reload, compare.
+  Future<bool> refreshFromPod() async {
+    final before = _contactsSignature();
+    await loadAllBooksFromPod();
+    final after = _contactsSignature();
+    return before != after;
+  }
+
+  /// Clear all in-memory state and restore the default Personal book.
+  void reset() {
+    _resetInMemoryState();
+    _state = AppState.idle;
+    _errorMessage = null;
+    _searchPattern = '';
+    notifyListeners();
+  }
+
+  /// Internal helper that wipes loaded contacts and books, leaving only the
+  /// default Personal book placeholder.
+  void _resetInMemoryState() {
+    _contactsByBook.clear();
+    _books
+      ..clear()
+      ..add(
+        AddressBook(
+          name: defaultBookName,
+          podPath: '$podBooksPath/$defaultBookName.json',
+          ownerWebId: '',
+        ),
+      );
   }
 
   /// Save all books to the pod (e.g. after import or edit).

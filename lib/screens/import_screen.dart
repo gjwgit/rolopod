@@ -26,18 +26,19 @@
 library;
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:gap/gap.dart';
+import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
 
 import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/models/contact_parser.dart';
+import 'package:rolopod/screens/import_export_io.dart';
 import 'package:rolopod/screens/import_widgets.dart';
 import 'package:rolopod/services/app_provider.dart';
 
@@ -71,101 +72,237 @@ class _ImportScreenState extends State<ImportScreen> {
   bool _loading = false;
   String? _error;
 
+  /// The address book that import/export actions operate on. Defaults to the
+  /// first available book; resolved in [build] against the current book list.
+  String? _selectedBook;
+
+  /// Resolve the selected book name against the current book list, falling
+  /// back to the first available book (or null when there are none).
+  String? _resolvedBook(AppProvider provider) {
+    final names = provider.books.map((b) => b.name).toList();
+    if (_selectedBook != null && names.contains(_selectedBook)) {
+      return _selectedBook;
+    }
+    return names.isNotEmpty ? names.first : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final provider = context.watch<AppProvider>();
+    final books = provider.books;
+    final bookNames = books.map((b) => b.name).toList();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Import Contacts',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const Gap(8),
-          Text(
-            'Import from Emacs BBDB or vCard (.vcf) files. '
-            'Contacts will be added to the selected address book.',
-            style: TextStyle(color: cs.onSurfaceVariant),
-          ),
-          if (_error != null) ...[
-            const Gap(12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: cs.errorContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: cs.onErrorContainer),
-                  const Gap(8),
-                  Expanded(
-                    child: Text(
-                      _error!,
-                      style: TextStyle(color: cs.onErrorContainer),
-                    ),
-                  ),
-                ],
-              ),
+    // Resolve the selected book against the current list.
+    final selected =
+        (_selectedBook != null && bookNames.contains(_selectedBook))
+            ? _selectedBook!
+            : (bookNames.isNotEmpty ? bookNames.first : null);
+    final count = selected == null ? 0 : provider.contactCountForBook(selected);
+    final entryWord = count == 1 ? 'entry' : 'entries';
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Address book selector ────────────────────────────────────
+            Text(
+              'Address Book',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-          ],
-          const Gap(24),
-          ImportCard(
-            icon: Icons.description_outlined,
-            title: 'Emacs BBDB',
-            subtitle: 'Import from a .bbdb file exported from Emacs.',
-            loading: _loading,
-            onImport: () => _pickAndImport(context, _ImportFormat.bbdb),
-          ),
-          const Gap(16),
-          ImportCard(
-            icon: Icons.contact_page_outlined,
-            title: 'vCard (.vcf)',
-            subtitle: 'Import from a vCard file (v3.0 or v4.0).',
-            loading: _loading,
-            onImport: () => _pickAndImport(context, _ImportFormat.vcard),
-          ),
-          const Gap(16),
-          ImportCard(
-            icon: Icons.backup_outlined,
-            title: 'RoloPod JSON backup',
-            subtitle:
-                'Restore contacts from a previously exported .json backup.',
-            loading: _loading,
-            onImport: () => _pickAndImportJson(context),
-          ),
-
-          // ── Export ──────────────────────────────────────────────────────
-          const Gap(32),
-          Text(
-            'Export / Backup',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const Gap(8),
-          Text(
-            'Save a copy of an address book as a JSON file for backup '
-            'or to move to another device.',
-            style: TextStyle(color: cs.onSurfaceVariant),
-          ),
-          const Gap(16),
-          ...context.read<AppProvider>().books.map(
-                (book) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ImportCard(
-                    icon: Icons.download_outlined,
-                    title: 'Export "${book.name}"',
-                    subtitle:
-                        'Save ${book.name}_YYYYMMDD_HHMM.json to your Downloads folder.',
-                    loading: _loading,
-                    buttonLabel: 'Save to File',
-                    onImport: () => _exportBook(context, book.name),
+            const Gap(8),
+            Text(
+              'Choose the address book that the import and export actions '
+              'below apply to.',
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+            const Gap(12),
+            DropdownMenu<String>(
+              initialSelection: selected,
+              label: const Text('Address book'),
+              enabled: bookNames.isNotEmpty,
+              onSelected: (value) => setState(() => _selectedBook = value),
+              dropdownMenuEntries: [
+                for (final name in bookNames)
+                  DropdownMenuEntry<String>(
+                    value: name,
+                    label: '$name (${provider.contactCountForBook(name)})',
                   ),
+              ],
+            ),
+            if (_error != null) ...[
+              const Gap(12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: cs.onErrorContainer),
+                    const Gap(8),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: TextStyle(color: cs.onErrorContainer),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-        ],
+            ],
+
+            // ── Backup & Restore ──────────────────────────────────────────
+            const Gap(32),
+            Text(
+              'Backup & Restore',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const Gap(8),
+            Text(
+              'Save a copy of the selected address book as a JSON file for '
+              'backup or to move to another device, or restore contacts from '
+              'a previously saved JSON backup.',
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+            const Gap(16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                MarkdownTooltip(
+                  message: selected == null
+                      ? 'No address book available to export.'
+                      : '**Export Backup**\n\n'
+                          'Save a JSON backup of "$selected" '
+                          '($count $entryWord) as '
+                          'rolopod_${selected}_YYYYMMDD_HHMM.json. You will '
+                          'be prompted for where to save it. Keep it '
+                          'somewhere safe so you can restore it later.',
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.download),
+                    label: const Text('Export Backup'),
+                    onPressed: (_loading || selected == null)
+                        ? null
+                        : () => _export(context, selected, ExportFormat.json),
+                  ),
+                ),
+                MarkdownTooltip(
+                  message: '**Import Backup**\n\n'
+                      'Restore contacts from a previously exported RoloPod '
+                      'JSON backup file. Restored contacts are merged into '
+                      'the matching address book.',
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.upload),
+                    label: const Text('Import Backup'),
+                    onPressed:
+                        _loading ? null : () => _pickAndImportJson(context),
+                  ),
+                ),
+              ],
+            ),
+
+            // ── Export ────────────────────────────────────────────────────
+            const Gap(32),
+            Text('Export', style: Theme.of(context).textTheme.titleLarge),
+            const Gap(8),
+            Text(
+              'Export the selected address book to an Emacs BBDB or vCard '
+              '(.vcf) file for use in other applications.',
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+            const Gap(16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                MarkdownTooltip(
+                  message: selected == null
+                      ? 'No address book available to export.'
+                      : '**Export to BBDB**\n\n'
+                          'Save "$selected" ($count $entryWord) as an Emacs '
+                          'BBDB (.bbdb) file. You will be prompted for where '
+                          'to save it.',
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.description_outlined),
+                    label: const Text('Export to BBDB'),
+                    onPressed: (_loading || selected == null)
+                        ? null
+                        : () => _export(
+                              context,
+                              selected,
+                              ExportFormat.bbdb,
+                            ),
+                  ),
+                ),
+                MarkdownTooltip(
+                  message: selected == null
+                      ? 'No address book available to export.'
+                      : '**Export to vCard**\n\n'
+                          'Save "$selected" ($count $entryWord) as a vCard '
+                          '(.vcf) file. You will be prompted for where to '
+                          'save it.',
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.contact_page_outlined),
+                    label: const Text('Export to vCard'),
+                    onPressed: (_loading || selected == null)
+                        ? null
+                        : () => _export(
+                              context,
+                              selected,
+                              ExportFormat.vcard,
+                            ),
+                  ),
+                ),
+              ],
+            ),
+
+            // ── Import ────────────────────────────────────────────────────
+            const Gap(32),
+            Text('Import', style: Theme.of(context).textTheme.titleLarge),
+            const Gap(8),
+            Text(
+              'Import from Emacs BBDB or vCard (.vcf) files. Contacts will be '
+              'added to the selected address book.',
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+            const Gap(16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                MarkdownTooltip(
+                  message: '**Emacs BBDB**\n\n'
+                      'Import contacts from a .bbdb file exported from Emacs '
+                      'into the selected address book.',
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.description_outlined),
+                    label: const Text('Emacs BBDB'),
+                    onPressed: _loading
+                        ? null
+                        : () => _pickAndImport(context, _ImportFormat.bbdb),
+                  ),
+                ),
+                MarkdownTooltip(
+                  message: '**vCard (.vcf)**\n\n'
+                      'Import contacts from a vCard file (v3.0 or v4.0) into '
+                      'the selected address book.',
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.contact_page_outlined),
+                    label: const Text('vCard (.vcf)'),
+                    onPressed: _loading
+                        ? null
+                        : () => _pickAndImport(context, _ImportFormat.vcard),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -206,13 +343,18 @@ class _ImportScreenState extends State<ImportScreen> {
 
       final content = utf8.decode(file.bytes!);
 
-      // Detect book name from filename: Personal_20260326_2005.json → Personal
+      // Detect book name from filename, e.g.
+      // rolopod_Personal_20260326_2005.json → Personal. Tolerates older
+      // backups without the rolopod_ prefix.
       final bookName = file.name
+          .replaceAll(RegExp(r'^rolopod_'), '')
           .replaceAll(RegExp(r'_\d{8}_\d{4}'), '')
           .replaceAll(RegExp(r'\.json$'), '');
       final targetBook = provider.books.any((b) => b.name == bookName)
           ? bookName
-          : provider.primaryBook?.name ?? defaultBookName;
+          : _resolvedBook(provider) ??
+              provider.primaryBook?.name ??
+              defaultBookName;
 
       // Parse the JSON contact list
       final decoded = jsonDecode(content) as List?;
@@ -276,7 +418,11 @@ class _ImportScreenState extends State<ImportScreen> {
 
   // ── JSON export ────────────────────────────────────────────────────────────
 
-  Future<void> _exportBook(BuildContext context, String bookName) async {
+  Future<void> _export(
+    BuildContext context,
+    String bookName,
+    ExportFormat format,
+  ) async {
     setState(() {
       _loading = true;
       _error = null;
@@ -286,49 +432,31 @@ class _ImportScreenState extends State<ImportScreen> {
     final provider = context.read<AppProvider>();
     final messenger = ScaffoldMessenger.of(context);
 
-    try {
-      final json = const JsonEncoder.withIndent('  ')
-          .convert(jsonDecode(provider.serialiseBook(bookName)));
-      final bytes = utf8.encode(json);
-      final now = DateTime.now();
-      final timestamp =
-          '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
-          '_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-      final fileName = '${bookName}_$timestamp.json';
+    final result = exportBytes(provider.serialiseBook(bookName), format);
+    final title = format == ExportFormat.json
+        ? 'Save JSON Backup'
+        : 'Save ${result.ext.toUpperCase()} Export';
+    final savePath = await savePickedBytes(
+      bytes: result.bytes,
+      fileName: timestampedName(bookName, result.ext),
+      ext: result.ext,
+      dialogTitle: title,
+    );
 
-      if (kIsWeb) {
-        // Web: use FilePicker save dialog if available, else show error.
-        setState(() {
-          _error = 'Export to file not supported on web.';
-          _loading = false;
-        });
-        return;
-      }
+    if (!mounted) return;
+    setState(() => _loading = false);
 
-      // Desktop/mobile: save to Downloads folder.
-      final home = Platform.environment['HOME'] ??
-          Platform.environment['USERPROFILE'] ??
-          '.';
-      final downloads = Directory('$home/Downloads');
-      final dir = downloads.existsSync() ? downloads : Directory(home);
-      final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(bytes);
-
-      setState(() => _loading = false);
-      if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Exported to ${file.path}'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } catch (e, st) {
-      debugPrint('[Export] error: $e\n$st');
-      setState(() {
-        _error = 'Export failed: $e';
-        _loading = false;
-      });
+    if (savePath == null) return; // cancelled
+    if (savePath.startsWith('error:')) {
+      setState(() => _error = savePath.substring(6));
+      return;
     }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Exported to $savePath'),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   Future<void> _pickAndImport(
@@ -374,7 +502,9 @@ class _ImportScreenState extends State<ImportScreen> {
 
       if (!context.mounted) return;
 
-      final bookName = provider.primaryBook?.name ?? defaultBookName;
+      final bookName = _resolvedBook(provider) ??
+          provider.primaryBook?.name ??
+          defaultBookName;
 
       final contacts = await compute(
         _parseContacts,

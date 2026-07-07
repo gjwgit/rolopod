@@ -1,25 +1,29 @@
 name: rolopod
 description: Privacy-first address book app with Solid Pod storage.
 publish_to: none
-version: 0.1.17+1
+version: 1.0.10+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
+  cupertino_icons: ^1.0.8
+  emacs_text_field: ^0.1.0
+  file_picker: any
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
-  gap: ^3.0.1
-  provider: ^6.1.5
-  markdown_tooltip: ^0.0.10
-  solidpod: ^0.12.2
-  solidui: ^0.3.18
   flutter_markdown_plus: any
-  uuid: any
-  file_picker: any
-
+  gap: ^3.0.1
+  markdown_tooltip: ^0.0.10
+  provider: ^6.1.5
+  solidpod: ^1.0.13
+  solidui: ^1.0.18
   url_launcher: any
+  uuid: any
+
+  intl: any
+  pdf: any
+  printing: any
 dependency_overrides:
   intl: ^0.20.2
 

@@ -1,6 +1,6 @@
 /// AppScaffold — main SolidScaffold with left nav for RoloPod.
 ///
-// Time-stamp: <Tuesday 2026-03-24 17:03:49 +1100 Graham Williams>
+// Time-stamp: <Sunday 2026-06-28 11:49:45 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -31,11 +31,14 @@ import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
+import 'package:rolopod/screens/birthday_calendar_screen.dart';
 import 'package:rolopod/screens/contacts_screen.dart';
 import 'package:rolopod/screens/duplicates_screen.dart';
 import 'package:rolopod/screens/import_screen.dart';
 import 'package:rolopod/screens/settings_screen.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/widgets/pod_refresh_action.dart';
+import 'package:rolopod/widgets/startup_overlay.dart';
 
 class AppScaffold extends StatefulWidget {
   const AppScaffold({super.key});
@@ -59,6 +62,8 @@ class _AppScaffoldState extends State<AppScaffold> {
   }
 
   Future<void> _initKeys() async {
+    final provider = context.read<AppProvider>();
+    provider.setStartupPhase(StartupPhase.unlocking);
     try {
       // Prompt for the security key if not already cached.
       // This shows the key entry popup on all platforms including Android.
@@ -68,10 +73,24 @@ class _AppScaffoldState extends State<AppScaffold> {
       setState(() => _isKeySaved = true);
 
       // Key is now available — safe to read encrypted pod files.
-      await context.read<AppProvider>().loadAllBooksFromPod();
+      provider.setStartupPhase(StartupPhase.loading);
+      await provider.loadAllBooksFromPod();
     } catch (e, st) {
       debugPrint('[AppScaffold] Security key error: $e\n$st');
+    } finally {
+      provider.setStartupPhase(StartupPhase.ready);
     }
+  }
+
+  // Wrap a menu screen so the busy overlay covers it while the Pod is being
+  // unlocked and contacts are loading, regardless of which screen is shown.
+  Widget _withStartupOverlay(Widget child) {
+    return Builder(
+      builder: (context) {
+        final phase = context.watch<AppProvider>().startupPhase;
+        return StartupOverlay(phase: phase, child: child);
+      },
+    );
   }
 
   @override
@@ -82,41 +101,93 @@ class _AppScaffoldState extends State<AppScaffold> {
       showLogout: false,
       showLogin: false,
       themeToggle: const SolidThemeToggleConfig(enabled: true),
-      appBar: const SolidAppBarConfig(
+      aboutConfig: SolidAboutConfig(
+        applicationName: appName,
+        applicationIcon: Image.asset(
+          'assets/images/app_icon.png',
+          width: 64,
+          height: 64,
+        ),
+        applicationLegalese: '''
+
+        © 2026 Togaware Pty Ltd
+
+        ''',
+        text: '''
+
+        RoloPod is a private contact manager that stores your address books —
+        contacts, phone numbers, emails, addresses and notes — encrypted in
+        your personal Solid Pod, so your data stays under your control. Your
+        Solid Pod can be hosted on any Solid server and being encrypted it is
+        protected against casual access by anyone, including the server
+        administrators.
+
+        ### Key features
+
+        - Browse and search across multiple address books
+        - Import from Emacs BBDB or vCard files
+        - Find and merge duplicate contacts
+        - Backup and restore your contacts as JSON
+        - Share address books with other Pod owners
+        - Export contacts as JSON, BBDB, vCard or PDF
+        - Security key management for encrypted data
+        - Theme switching (light / dark / system)
+
+        For more information, visit the
+        [RoloPod](https://github.com/gjwgit/rolopod) GitHub repository and our
+        [Australian Solid Community](https://solidcommunity.au) web site.
+
+        ''',
+        readmeUrl: 'https://gjwgit.github.io/rolopod',
+      ),
+      appBar: SolidAppBarConfig(
         title: appName,
-        versionConfig: SolidVersionConfig(
+        versionConfig: const SolidVersionConfig(
           changelogUrl:
               'https://github.com/gjwgit/rolopod/blob/dev/CHANGELOG.md',
         ),
+        actions: [
+          buildPodRefreshAction(
+            context: context,
+            onRefresh: context.read<AppProvider>().refreshFromPod,
+          ),
+        ],
       ),
-      menu: const [
+      menu: [
         SolidMenuItem(
           title: 'Contacts',
           icon: Icons.contacts,
           tooltip: '**Contacts**\n\nBrowse and search all your address books.',
-          child: ContactsScreen(),
+          child: _withStartupOverlay(const ContactsScreen()),
         ),
         SolidMenuItem(
-          title: 'Import / Export',
-          icon: Icons.import_export,
-          tooltip: '**Import / Export**\n\n'
-              'Import contacts from BBDB or vCard files, '
-              'or export a backup as JSON.',
-          child: ImportScreen(),
+          title: 'Birthdays',
+          icon: Icons.cake,
+          tooltip: '**Birthdays**\n\nA month calendar with your contacts'
+              ' birthdays marked.',
+          child: _withStartupOverlay(const BirthdayCalendarScreen()),
         ),
         SolidMenuItem(
           title: 'Duplicates',
           icon: Icons.content_copy,
           tooltip: '**Duplicates**\n\n'
               'Find and merge duplicate contacts across your address books.',
-          child: DuplicatesScreen(),
+          child: _withStartupOverlay(const DuplicatesScreen()),
         ),
         SolidMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          tooltip: '**Settings**\n\n'
+          title: 'Books',
+          icon: Icons.library_books,
+          tooltip: '**Books**\n\n'
               'Manage address books, sharing and app preferences.',
-          child: SettingsScreen(),
+          child: _withStartupOverlay(const SettingsScreen()),
+        ),
+        SolidMenuItem(
+          title: 'Backup',
+          icon: Icons.save_alt,
+          tooltip: '**Backup**\n\n'
+              'Back up and restore your contacts, or import from '
+              'BBDB or vCard files.',
+          child: _withStartupOverlay(const ImportScreen()),
         ),
       ],
       statusBar: SolidStatusBarConfig(

@@ -35,6 +35,7 @@ import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_detail.dart';
 import 'package:rolopod/pages/contact_edit.dart';
+import 'package:rolopod/screens/contacts_pdf.dart';
 import 'package:rolopod/services/app_provider.dart';
 import 'package:rolopod/widgets/contact_tile.dart';
 
@@ -48,6 +49,15 @@ class ContactsScreen extends StatefulWidget {
 class _ContactsScreenState extends State<ContactsScreen> {
   final _searchController = TextEditingController();
   bool _regexError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Reflect any search filter still held by the provider so the box and the
+    // active filter stay in sync when returning to this screen.
+    final pattern = context.read<AppProvider>().searchPattern;
+    if (pattern.isNotEmpty) _searchController.text = pattern;
+  }
 
   @override
   void dispose() {
@@ -182,6 +192,19 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 style: TextStyle(
                   color: cs.onSurfaceVariant,
                   fontSize: 12,
+                ),
+              ),
+              const Spacer(),
+              MarkdownTooltip(
+                message: '**View PDF**\n\n'
+                    'Display the currently listed contacts as a PDF. '
+                    'From the preview you can save it to a file.',
+                child: TextButton.icon(
+                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                  label: const Text('View PDF'),
+                  onPressed: contacts.isEmpty
+                      ? null
+                      : () => showContactsPdfPreview(context, contacts),
                 ),
               ),
             ],

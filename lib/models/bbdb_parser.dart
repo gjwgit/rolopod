@@ -65,6 +65,76 @@ List<Contact> parseBbdb(String content, {required String bookName}) {
   return contacts;
 }
 
+// ── Export ──────────────────────────────────────────────────────────────────
+
+/// Quote a string as a BBDB Lisp string token, or `nil` when null/empty.
+String _bStr(String? s) {
+  if (s == null || s.isEmpty) return 'nil';
+  final escaped = s.replaceAll('\\', r'\\').replaceAll('"', r'\"');
+  return '"$escaped"';
+}
+
+/// A Lisp list of quoted strings, e.g. ("a" "b"), or nil when empty.
+String _bStrList(Iterable<String> items) {
+  final values = items.where((s) => s.isNotEmpty).toList();
+  if (values.isEmpty) return 'nil';
+  return '(${values.map((s) => _bStr(s)).join(' ')})';
+}
+
+/// Serialise [contacts] to a BBDB file (one record per line), using the
+/// positional layout expected by [parseBbdb].
+String toBbdb(List<Contact> contacts) {
+  final buf = StringBuffer();
+  // Standard BBDB file-format header comments.
+  buf.writeln(';; -*-coding: utf-8-emacs;-*-');
+  buf.writeln(';;; file-format: 9');
+
+  for (final c in contacts) {
+    // [5] phones: (["label" "number"] ...)
+    final phones = c.phones.isEmpty
+        ? 'nil'
+        : '(${c.phones.map((p) => '[${_bStr(p.label)} ${_bStr(p.value)}]').join(' ')})';
+
+    // [6] addresses: (["label" ("street") "city" "state" "zip" "country"] ...)
+    final addresses = c.addresses.isEmpty
+        ? 'nil'
+        : '(${c.addresses.map(
+              (a) => '[${_bStr(a.label)} '
+                  '${a.street == null || a.street!.isEmpty ? 'nil' : '(${_bStr(a.street)})'} '
+                  '${_bStr(a.city)} ${_bStr(a.state)} ${_bStr(a.postcode)} '
+                  '${_bStr(a.country)}]',
+            ).join(' ')})';
+
+    // [7] emails: ("a@b" "c@d" ...)
+    final emails = _bStrList(c.emails.map((e) => e.value));
+
+    // [8] xfields alist: ((url . "...") (birthday . "YYYY-MM-DD") ...)
+    final xfields = <String>[];
+    if (c.urls.isNotEmpty) {
+      xfields.add('(url . ${_bStr(c.urls.first.value)})');
+    }
+    if (c.birthday != null) {
+      xfields.add(
+        '(birthday . ${_bStr(c.birthday!.toIso8601String().substring(0, 10))})',
+      );
+    }
+    if (c.notes != null && c.notes!.isNotEmpty) {
+      xfields.add('(notes . ${_bStr(c.notes)})');
+    }
+    final xfieldsStr = xfields.isEmpty ? 'nil' : '(${xfields.join(' ')})';
+
+    final created = _bStr(c.createdAt?.toIso8601String());
+    final updated = _bStr(c.updatedAt?.toIso8601String());
+
+    buf.writeln(
+      '[${_bStr(c.firstName)} ${_bStr(c.lastName)} nil '
+      '${_bStr(c.organisation)} ${_bStrList(c.tags)} $phones $addresses '
+      '$emails $xfieldsStr ${_bStr(c.id)} $created $updated]',
+    );
+  }
+  return buf.toString();
+}
+
 Contact? _parseBbdbRecord(String line, {required String bookName}) {
   if (!line.startsWith('[')) return null;
 

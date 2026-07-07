@@ -1,6 +1,6 @@
 /// ImportWidgets — confirmation dialog and import card for ImportScreen.
 ///
-// Time-stamp: <2026-03-22 Graham Williams>
+// Time-stamp: <Monday 2026-06-15 19:29:44 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -175,77 +175,6 @@ class ImportConfirmDialogState extends State<ImportConfirmDialog> {
           child: const Text('Import'),
         ),
       ],
-    );
-  }
-}
-
-// ── Import card ───────────────────────────────────────────────────────────────
-
-class ImportCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool loading;
-  final VoidCallback onImport;
-  final String buttonLabel;
-
-  const ImportCard({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.loading,
-    required this.onImport,
-    this.buttonLabel = 'Choose file',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, size: 36, color: cs.primary),
-            const Gap(16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const Gap(4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Gap(16),
-            loading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : FilledButton.tonal(
-                    onPressed: onImport,
-                    child: Text(buttonLabel),
-                  ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -27,6 +27,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'package:emacs_text_field/emacs_text_field.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 
@@ -73,6 +74,10 @@ class _ContactEditState extends State<ContactEdit> {
   late List<FocusNode> _childFocusNodes;
   bool _focusNewTag = false;
 
+  /// Whether any field has been edited since the editor opened. Drives the
+  /// enabled state of the Save button.
+  bool _dirty = false;
+
   @override
   void initState() {
     super.initState();
@@ -103,6 +108,67 @@ class _ContactEditState extends State<ContactEdit> {
 
     _tags = c.tags.map((t) => TextEditingController(text: t)).toList();
     _childFocusNodes = List.generate(_children.length, (_) => FocusNode());
+
+    // Wire change detection: any edit to a text field marks the form dirty so
+    // the Save button enables. Non-text changes (dates, adding/removing list
+    // items) call _markDirty() directly from their handlers.
+    for (final ctrl in _allTextControllers) {
+      ctrl.addListener(_markDirty);
+    }
+  }
+
+  /// Every text controller currently in the form, including those inside the
+  /// dynamic email/phone/url/address/tag/children lists.
+  Iterable<TextEditingController> get _allTextControllers => [
+        _firstName,
+        _lastName,
+        _displayName,
+        _nickname,
+        _organisation,
+        _jobTitle,
+        _notes,
+        _gender,
+        _spouse,
+        ..._children,
+        ..._tags,
+        for (final f in _emails) ...[f.label, f.value],
+        for (final f in _phones) ...[f.label, f.value],
+        for (final f in _urls) ...[f.label, f.value],
+        for (final f in _addresses) ...[
+          f.label,
+          f.street,
+          f.city,
+          f.state,
+          f.postcode,
+          f.country,
+        ],
+      ];
+
+  /// Mark the form as having unsaved changes (enables the Save button).
+  void _markDirty() {
+    if (!_dirty) setState(() => _dirty = true);
+  }
+
+  /// Attach change detection to a newly added labelled field and mark dirty.
+  void _attachLabeled(LabeledField f) {
+    f.label.addListener(_markDirty);
+    f.value.addListener(_markDirty);
+    _markDirty();
+  }
+
+  /// Attach change detection to a newly added address field and mark dirty.
+  void _attachAddress(AddressField f) {
+    for (final c in [
+      f.label,
+      f.street,
+      f.city,
+      f.state,
+      f.postcode,
+      f.country,
+    ]) {
+      c.addListener(_markDirty);
+    }
+    _markDirty();
   }
 
   @override
@@ -146,7 +212,7 @@ class _ContactEditState extends State<ContactEdit> {
 
   // ── Save ───────────────────────────────────────────────────────────────────
 
-  void _save(BuildContext context) {
+  Future<void> _save(BuildContext context) async {
     String? clean(TextEditingController c) {
       final v = c.text.trim();
       return v.isEmpty ? null : v;
@@ -175,9 +241,10 @@ class _ContactEditState extends State<ContactEdit> {
       updatedAt: _updatedAtEdited ? _updatedAt : DateTime.now(),
     );
     final provider = context.read<AppProvider>();
-    provider.upsertContact(updated);
+    await provider.upsertContact(updated);
     // Persist to pod in background — don't block the UI.
-    provider.saveBookToPod(updated.bookName);
+    await provider.saveBookToPod(updated.bookName);
+    if (!context.mounted) return;
     Navigator.of(context).pop();
   }
 
@@ -192,7 +259,12 @@ class _ContactEditState extends State<ContactEdit> {
       lastDate: now,
       helpText: 'Select birthday',
     );
-    if (picked != null) setState(() => _birthday = picked);
+    if (picked != null) {
+      setState(() {
+        _birthday = picked;
+        _dirty = true;
+      });
+    }
   }
 
   // ── Updated-at picker (date + time) ───────────────────────────────────────
@@ -228,6 +300,7 @@ class _ContactEditState extends State<ContactEdit> {
       _updatedAt =
           DateTime(date.year, date.month, date.day, time.hour, time.minute);
       _updatedAtEdited = true;
+      _dirty = true;
     });
   }
 
@@ -321,6 +394,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onAdd: () {
                         final field = LabeledField.empty('email');
                         setState(() => _emails.add(field));
+                        _attachLabeled(field);
                         WidgetsBinding.instance.addPostFrameCallback(
                           (_) => field.valueFocus.requestFocus(),
                         );
@@ -328,6 +402,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onRemove: (i) => setState(() {
                         _emails[i].dispose();
                         _emails.removeAt(i);
+                        _dirty = true;
                       }),
                     ),
                     const Gap(16),
@@ -343,6 +418,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onAdd: () {
                         final field = LabeledField.empty('mobile');
                         setState(() => _phones.add(field));
+                        _attachLabeled(field);
                         WidgetsBinding.instance.addPostFrameCallback(
                           (_) => field.valueFocus.requestFocus(),
                         );
@@ -350,6 +426,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onRemove: (i) => setState(() {
                         _phones[i].dispose();
                         _phones.removeAt(i);
+                        _dirty = true;
                       }),
                     ),
                     const Gap(16),
@@ -363,6 +440,7 @@ class _ContactEditState extends State<ContactEdit> {
                               onRemove: () => setState(() {
                                 _addresses[e.key].dispose();
                                 _addresses.removeAt(e.key);
+                                _dirty = true;
                               }),
                             ),
                           ),
@@ -372,6 +450,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onPressed: () {
                         final field = AddressField.empty();
                         setState(() => _addresses.add(field));
+                        _attachAddress(field);
                         WidgetsBinding.instance.addPostFrameCallback(
                           (_) => field.streetFocus.requestFocus(),
                         );
@@ -390,6 +469,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onAdd: () {
                         final field = LabeledField.empty('url');
                         setState(() => _urls.add(field));
+                        _attachLabeled(field);
                         WidgetsBinding.instance.addPostFrameCallback(
                           (_) => field.valueFocus.requestFocus(),
                         );
@@ -397,6 +477,7 @@ class _ContactEditState extends State<ContactEdit> {
                       onRemove: (i) => setState(() {
                         _urls[i].dispose();
                         _urls.removeAt(i);
+                        _dirty = true;
                       }),
                     ),
                     const Gap(16),
@@ -464,7 +545,10 @@ class _ContactEditState extends State<ContactEdit> {
                           child: Text('Other'),
                         ),
                       ],
-                      onChanged: (v) => setState(() => _gender.text = v ?? ''),
+                      onChanged: (v) => setState(() {
+                        _gender.text = v ?? '';
+                        _dirty = true;
+                      }),
                     ),
                     const Gap(12),
                     EditField(
@@ -494,6 +578,7 @@ class _ContactEditState extends State<ContactEdit> {
                                     _children.removeAt(e.key);
                                     _childFocusNodes[e.key].dispose();
                                     _childFocusNodes.removeAt(e.key);
+                                    _dirty = true;
                                   }),
                                 ),
                               ],
@@ -504,9 +589,12 @@ class _ContactEditState extends State<ContactEdit> {
                       label: 'Add child',
                       onPressed: () {
                         final node = FocusNode();
+                        final ctrl = TextEditingController();
+                        ctrl.addListener(_markDirty);
                         setState(() {
-                          _children.add(TextEditingController());
+                          _children.add(ctrl);
                           _childFocusNodes.add(node);
+                          _dirty = true;
                         });
                         WidgetsBinding.instance.addPostFrameCallback(
                           (_) => node.requestFocus(),
@@ -542,6 +630,7 @@ class _ContactEditState extends State<ContactEdit> {
                                 onPressed: () => setState(() {
                                   _tags[e.key].dispose();
                                   _tags.removeAt(e.key);
+                                  _dirty = true;
                                 }),
                               ),
                             ],
@@ -552,20 +641,21 @@ class _ContactEditState extends State<ContactEdit> {
                     EditAddButton(
                       label: 'Add tag',
                       onPressed: () {
+                        final ctrl = TextEditingController();
+                        ctrl.addListener(_markDirty);
                         setState(() {
-                          _tags.add(TextEditingController());
+                          _tags.add(ctrl);
                           _focusNewTag = true;
+                          _dirty = true;
                         });
                       },
                     ),
                     const Gap(16),
                     editSectionLabel(context, 'Notes'),
                     const Gap(8),
-                    TextField(
+                    EmacsTextField(
                       controller: _notes,
-                      maxLines: null,
                       minLines: 4,
-                      keyboardType: TextInputType.multiline,
                       decoration: const InputDecoration(
                         labelText: 'Notes (markdown supported)',
                         alignLabelWithHint: true,
@@ -627,7 +717,7 @@ class _ContactEditState extends State<ContactEdit> {
                   ),
                   const Gap(8),
                   FilledButton(
-                    onPressed: () => _save(context),
+                    onPressed: _dirty ? () => _save(context) : null,
                     child: const Text('Save'),
                   ),
                 ],

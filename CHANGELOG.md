@@ -1,8 +1,7 @@
 # Rolo Pod Change Log
 
 Noted here are the high level changes for the app.  Each update
-includes a short user-oriented description.  The next release is 0.2
-following incremental updates through the 0.1.n series.
+includes a short user-oriented description.
 
 You can run the app in your browser from the
 [**web**](https://rolopod.solidcommunity.au) or else download and
@@ -35,29 +34,21 @@ This app has been pair programmed by [Graham
 Williams](https://togaware.com/Graham.Williams.html) and [Claude
 Code](https://claude.com/product/claude-code).
 
-## ToDo
+## 1.0 New secret keey handling
 
-Pod sharing — implement the share UI in Settings (enter a WebID to
-share a book with)
++ Update solidpod/solidui dependencies [1.0.10 20260703 gjw]
++ Bug fix interaction between CONTACTS and CALENDAR [1.0.9 20260628 gjw]
++ Bug fix age calculation [1.0.8 20260628 gjw]
++ Add CALENDAR [1.0.7 20260628 gjw]
++ Update ABOUT [1.0.6 20260623 gjw]
++ Add a REFRESH button [1.0.5 20260619 gjw]
++ Add ABOUT text [1.0.4 20260614 gjw]
++ Format markdown NOTES in PDF. Use emacs_widget edit [1.0.3 20260614 gjw]
++ Add PDF view/print support [1.0.2 20260614 gjw]
++ Add a HOME page and reorgnise BACKUP [1.0.1 20260614 gjw]
++ Migrate to latest solid_auth with secure key [1.0.0 20260614 gjw]
 
-Search enhancements — spouse:name, child:name search prefixes
-alongside tag:
-
-Duplicate detection — wire up the merge to also save to pod after
-merging
-
-vCard import — wire up the file picker for vCard the same way BBDB is
-done
-
-BBDB field mapping — the parser currently skips positions [2]/[3]
-(org/nickname); some BBDB files may have data there worth extracting
-
-Export — export a book back to BBDB or vCard format
-
-Settings screen — flesh out the book management (rename, delete,
-sharing UI)
-
-## 0.2 Basic Functionality
+## 0.1 Basic Functionality
 
 + Ensure popups don't dismiss without save [0.1.17 20260412 gjw]
 + Support tap of tel number to call tel: [0.1.16 20260410 gjw]
@@ -76,7 +67,4 @@ sharing UI)
 + Meta infrastructure for building installers [0.1.3 20260324 gjw]
 + Support load, save, editing, linking contacts [0.1.2 20260323 gjw]
 + Support basic import of BBDB [0.1.1 20260323 gjw]
-
-## 0.1 Initial Shell App
-
 + Initial working app to view the design [0.1.0 20260323 gjw]

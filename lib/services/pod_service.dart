@@ -103,14 +103,22 @@ class PodService {
   ///
   /// Returns the raw JSON string, or null if not found / on error.
   static Future<String?> loadBook(String bookName) async {
+    final filename = _bookFilename(bookName);
     try {
-      final filename = _bookFilename(bookName);
       dev.log('[Pod] Reading $filename …', name: 'PodService');
       final ttl = await readPod(filename);
       if (ttl.isEmpty) return null;
       final json = _ttlToJson(ttl);
       dev.log('[Pod] Loaded $filename', name: 'PodService');
       return json;
+    } on ResourceNotExistException {
+      // First-time use for this book: the TTL file has not been created yet.
+      // This is expected, not an error.
+      dev.log(
+        '[Pod] $filename not found on pod (no data yet for $bookName)',
+        name: 'PodService',
+      );
+      return null;
     } catch (e, st) {
       debugPrint('[Pod] loadBook error ($bookName): $e\n$st');
       dev.log('[Pod] loadBook error ($bookName): $e\n$st', name: 'PodService');
@@ -160,8 +168,20 @@ class PodService {
       final json = _ttlToJson(ttl);
       if (json == null) return [];
       return List<String>.from(jsonDecode(json) as List? ?? []);
-    } catch (_) {
+    } on ResourceNotExistException {
+      // No index yet for this user — normal for first-time use.
+      dev.log(
+        '[Pod] index.ttl not found (first-time user)',
+        name: 'PodService',
+      );
       return [];
+    } catch (e, st) {
+      // A genuine read error (network, decode). Rethrow so callers that must
+      // not clobber the index (e.g. _addToIndex) can bail out rather than
+      // overwrite a good index with a truncated one.
+      debugPrint('[Pod] _readIndex error: $e\n$st');
+      dev.log('[Pod] _readIndex error: $e', name: 'PodService');
+      rethrow;
     }
   }
 
@@ -172,7 +192,18 @@ class PodService {
   }
 
   static Future<void> _addToIndex(String bookName) async {
-    final index = await _readIndex();
+    // If the index cannot be read reliably, do NOT write — overwriting with a
+    // truncated list would make other books vanish until the next full reload.
+    final List<String> index;
+    try {
+      index = await _readIndex();
+    } catch (_) {
+      dev.log(
+        '[Pod] Skipping index update for "$bookName" — index unreadable.',
+        name: 'PodService',
+      );
+      return;
+    }
     if (!index.contains(bookName)) {
       index.add(bookName);
       index.sort();

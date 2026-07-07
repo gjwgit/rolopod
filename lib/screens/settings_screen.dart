@@ -42,50 +42,52 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Address Books',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const Gap(16),
-          ...provider.books.map((book) => _BookTile(book: book)),
-          const Gap(8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.add),
-            label: const Text('New address book'),
-            onPressed: () => _newBook(context, provider),
-          ),
-          const Gap(32),
-          Text(
-            'Shared With Me',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const Gap(8),
-          Text(
-            'Address books that others have shared with you.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 13,
+    return SizedBox.expand(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Address Books',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-          ),
-          const Gap(16),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.folder_shared_outlined),
-            label: const Text('View shared resources'),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const SharedResourcesUi(
-                  child: _ReturnPage(),
+            const Gap(16),
+            ...provider.books.map((book) => _BookTile(book: book)),
+            const Gap(8),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('New address book'),
+              onPressed: () => _newBook(context, provider),
+            ),
+            const Gap(32),
+            Text(
+              'Shared With Me',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const Gap(8),
+            Text(
+              'Address books that others have shared with you.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const Gap(16),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.folder_shared_outlined),
+              label: const Text('View shared resources'),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const SharedResourcesUi(
+                    child: _ReturnPage(),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -178,7 +180,7 @@ void _manageSharing(BuildContext context, AddressBook book) {
     context,
     MaterialPageRoute<void>(
       builder: (_) => GrantPermissionUi(
-        resourceName: '${book.name}.ttl',
+        resourceNames: ['${book.name}.ttl'],
         child: const _ReturnPage(),
       ),
     ),

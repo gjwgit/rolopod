@@ -104,11 +104,11 @@ class _RoloPodAppState extends State<RoloPodApp> {
         logo: const AssetImage('assets/images/app_icon.png'),
         link: 'https://github.com/gjwgit/rolopod',
         clientId:
-            'https://solidcommunity.au/apps/rolopod/client-profile.jsonld',
+            'https://rolopod.solidcommunity.au/client-profile.jsonld',
         redirectUris: [
-          'http://localhost:4400/redirect',
+          'http://localhost:4400/redirect.html',
           'com.togaware.rolopod://redirect',
-          'https://solidcommunity.au/apps/rolopod/redirect.html',
+          'https://rolopod.solidcommunity.au/redirect.html',
         ],
         child: const AppScaffold(),
       ),

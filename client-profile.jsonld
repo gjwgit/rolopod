@@ -1,6 +1,6 @@
 {
   "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
-  "client_id": "https://anusii.github.io/rolopod/client-profile.jsonld",
+  "client_id": "https://gjwgit.github.io/rolopod/client-profile.jsonld",
   "client_name": "RoloPod",
   "application_type": "native",
   "redirect_uris": [

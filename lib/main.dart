@@ -104,7 +104,7 @@ class _RoloPodAppState extends State<RoloPodApp> {
         image: const AssetImage('assets/images/app_image.jpg'),
         logo: const AssetImage('assets/images/app_icon.png'),
         link: 'https://github.com/gjwgit/rolopod',
-        clientId: 'https://anusii.github.io/rolopod/client-profile.jsonld',
+        clientId: 'https://gjwgit.github.io/rolopod/client-profile.jsonld',
         redirectUris: kIsWeb
             ? ['${Uri.base.origin}/redirect.html']
             : const [

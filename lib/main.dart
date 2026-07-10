@@ -25,6 +25,7 @@
 
 library;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -103,13 +104,13 @@ class _RoloPodAppState extends State<RoloPodApp> {
         image: const AssetImage('assets/images/app_image.jpg'),
         logo: const AssetImage('assets/images/app_icon.png'),
         link: 'https://github.com/gjwgit/rolopod',
-        clientId:
-            'https://rolopod.solidcommunity.au/client-profile.jsonld',
-        redirectUris: [
-          'http://localhost:4400/redirect.html',
-          'com.togaware.rolopod://redirect',
-          'https://rolopod.solidcommunity.au/redirect.html',
-        ],
+        clientId: 'https://anusii.github.io/rolopod/client-profile.jsonld',
+        redirectUris: kIsWeb
+            ? ['${Uri.base.origin}/redirect.html']
+            : const [
+                'com.togaware.rolopod://redirect',
+                'http://localhost:4400/redirect.html',
+              ],
         child: const AppScaffold(),
       ),
     );

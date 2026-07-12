@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ OIDC updates [1.0.11 20260712 tonypioneer]
 + Update solidpod/solidui dependencies [1.0.10 20260703 gjw]
 + Bug fix interaction between CONTACTS and CALENDAR [1.0.9 20260628 gjw]
 + Bug fix age calculation [1.0.8 20260628 gjw]

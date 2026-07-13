@@ -17,7 +17,7 @@ AU](https://solidcommunity.au) or directly: for **Android** as
 [dmg](https://solidcommunity.au/installers/rolopod-macos.dmg) or
 [zip](https://solidcommunity.au/installers/rolopod-macos.zip); for
 **Windows** as
-[inno](https://solidcommunity.au/installers/rolopod-windows-inno.exe)
+[exe](https://solidcommunity.au/installers/rolopod-windows-inno.exe)
 or [zip](https://solidcommunity.au/installers/rolopod-windows.zip).
 
 Contributions are welcome. Visit

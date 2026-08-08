@@ -250,8 +250,15 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
     );
     final provider = context.read<AppProvider>();
     await provider.upsertContact(updated);
-    // Persist to pod in background — don't block the UI.
-    await provider.saveBookToPod(updated.bookName);
+    // Persist to the pod, awaited so a window close cannot cut the write off.
+    final error = await provider.saveBookToPod(updated.bookName);
+    if (error != null) {
+      // Leave _dirty set: nothing reached the Pod, so the close prompt must
+      // still fire rather than letting the contact be lost silently.
+      SolidWriteFailures.reportIfFailed(error, during: 'saving the contact');
+
+      return;
+    }
     // Everything is written, so there is nothing unsaved left to prompt about.
     if (mounted) setState(() => _dirty = false);
   }

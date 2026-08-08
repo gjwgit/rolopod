@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
+import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/models/duplicate_detector.dart';
 import 'package:rolopod/screens/duplicate_compare.dart';
@@ -164,7 +165,10 @@ class _DuplicatesScreenState extends State<DuplicatesScreen> {
 
   void _doMerge(DuplicatePair pair, int i, AppProvider provider) {
     provider.mergeDuplicates(pair, targetBook: pair.a.bookName);
-    provider.saveBookToPod(pair.a.bookName);
+    SolidWriteFailures.watch(
+      provider.saveBookToPod(pair.a.bookName),
+      during: 'merging the duplicates',
+    );
     setState(() {
       _pairs = List.from(_pairs!)..removeAt(i);
     });

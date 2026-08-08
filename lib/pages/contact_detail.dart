@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:solidui/solidui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rolopod/models/contact.dart';
@@ -419,7 +420,10 @@ class _ContactDetailState extends State<ContactDetail> {
             onPressed: () {
               final bookName = _contact.bookName;
               provider.deleteContact(_contact.id);
-              provider.saveBookToPod(bookName);
+              SolidWriteFailures.watch(
+                provider.saveBookToPod(bookName),
+                during: 'deleting the contact',
+              );
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },

@@ -122,7 +122,7 @@ class _RoloPodAppState extends State<RoloPodApp> {
                 'com.togaware.rolopod://redirect',
                 'http://localhost:4400/redirect.html',
               ],
-        child: const AppScaffold(),
+        child: const SolidWriteFailureListener(child: AppScaffold()),
       ),
     );
   }

@@ -163,36 +163,42 @@ class _DuplicatesScreenState extends State<DuplicatesScreen> {
     );
   }
 
-  void _doMerge(DuplicatePair pair, int i, AppProvider provider) {
-    provider.mergeDuplicates(pair, targetBook: pair.a.bookName);
+  Future<void> _doMerge(
+    DuplicatePair pair,
+    int i,
+    AppProvider provider,
+  ) async {
+    // Awaited before saving: the merged contact must be in the list that
+    // saveBookToPod serialises.
+    await provider.mergeDuplicates(pair, targetBook: pair.a.bookName);
     SolidWriteFailures.watch(
       provider.saveBookToPod(pair.a.bookName),
       during: 'merging the duplicates',
     );
+    if (!mounted) return;
     setState(() {
       _pairs = List.from(_pairs!)..removeAt(i);
     });
   }
 
-  void _showComparison(
+  Future<void> _showComparison(
     BuildContext context,
     DuplicatePair pair,
     int i,
     AppProvider provider,
-  ) {
-    showDialog<CompareAction>(
+  ) async {
+    final action = await showDialog<CompareAction>(
       context: context,
       barrierDismissible: false,
       builder: (_) => ComparisonDialog(pair: pair),
-    ).then((action) {
-      if (!mounted) return;
-      if (action == CompareAction.merge) _doMerge(pair, i, provider);
-      if (action == CompareAction.dismiss) {
-        setState(() {
-          _pairs = List.from(_pairs!)..removeAt(i);
-        });
-      }
-    });
+    );
+    if (!mounted) return;
+    if (action == CompareAction.merge) await _doMerge(pair, i, provider);
+    if (action == CompareAction.dismiss) {
+      setState(() {
+        _pairs = List.from(_pairs!)..removeAt(i);
+      });
+    }
   }
 }
 

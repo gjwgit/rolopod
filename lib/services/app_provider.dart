@@ -260,11 +260,18 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// Merge a duplicate pair — keeps [primary], deletes [secondary].
-  void mergeDuplicates(DuplicatePair pair, {required String targetBook}) {
+  Future<void> mergeDuplicates(
+    DuplicatePair pair, {
+    required String targetBook,
+  }) async {
     final merged = mergeContacts(pair.a, pair.b, bookName: targetBook);
     deleteContact(pair.a.id);
     deleteContact(pair.b.id);
-    upsertContact(merged);
+    // Awaited. Deleting both halves can empty the book, and upsertContact
+    // then reloads it from the Pod before appending, so it suspends. Left
+    // unawaited the caller would serialise the still-empty list and write
+    // that over the top of the merged contact.
+    await upsertContact(merged);
   }
 
   // ── Pod save / load ────────────────────────────────────────────────────────

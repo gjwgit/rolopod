@@ -30,12 +30,23 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:rolopod/app_scaffold.dart';
 import 'package:rolopod/services/app_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 20260808 gjw Route the desktop title-bar close button through the solidui
+  // close guard rather than quitting immediately, so a contact being edited
+  // with unsaved changes can be saved or discarded instead of being silently
+  // lost. ContactEdit registers a resolver with the guard.
+
+  if (isDesktop) {
+    await windowManager.ensureInitialized();
+    await SolidWindowCloseGuard.enable();
+  }
 
   // Initialise SolidUI security key manager so it can automatically prompt
   // the user for their security key whenever solidpod needs it.

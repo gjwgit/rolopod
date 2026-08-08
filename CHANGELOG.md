@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Prompt to save unsaved contact on window close [1.0.12 20260808 gjw]
 + OIDC updates [1.0.11 20260712 tonypioneer]
 + Update solidpod/solidui dependencies [1.0.10 20260703 gjw]
 + Bug fix interaction between CONTACTS and CALENDAR [1.0.9 20260628 gjw]

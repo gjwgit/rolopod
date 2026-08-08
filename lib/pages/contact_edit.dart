@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:emacs_text_field/emacs_text_field.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/edit_field_widgets.dart';
@@ -49,7 +50,7 @@ class ContactEdit extends StatefulWidget {
   State<ContactEdit> createState() => _ContactEditState();
 }
 
-class _ContactEditState extends State<ContactEdit> {
+class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
   // ── Scalar fields ──────────────────────────────────────────────────────────
   late final TextEditingController _firstName;
   late final TextEditingController _lastName;
@@ -212,7 +213,14 @@ class _ContactEditState extends State<ContactEdit> {
 
   // ── Save ───────────────────────────────────────────────────────────────────
 
-  Future<void> _save(BuildContext context) async {
+  /// Write the edited contact to the provider and the Pod.
+  ///
+  /// Does NOT pop the editor: a window close waits on this and must not
+  /// disturb the navigator. Returns once the Pod write has completed — the
+  /// window is destroyed the moment the close guard resolves, so a
+  /// fire-and-forget write would be killed mid-flight and the edit lost.
+
+  Future<void> _persist(BuildContext context) async {
     String? clean(TextEditingController c) {
       final v = c.text.trim();
       return v.isEmpty ? null : v;
@@ -244,8 +252,45 @@ class _ContactEditState extends State<ContactEdit> {
     await provider.upsertContact(updated);
     // Persist to pod in background — don't block the UI.
     await provider.saveBookToPod(updated.bookName);
+    // Everything is written, so there is nothing unsaved left to prompt about.
+    if (mounted) setState(() => _dirty = false);
+  }
+
+  /// Save and close the editor.
+
+  Future<void> _save(BuildContext context) async {
+    await _persist(context);
     if (!context.mounted) return;
     Navigator.of(context).pop();
+  }
+
+  // The window-close prompt comes from UnsavedChangesMixin, which needs to
+  // know what counts as unsaved and how to save without popping the route.
+
+  @override
+  bool get hasUnsavedChanges => _dirty;
+
+  @override
+  Future<void> saveUnsavedChanges() => _persist(context);
+
+  /// Close the editor, but if there are unsaved changes first ask the user
+  /// whether to save, discard, or keep editing.
+
+  Future<void> _confirmDiscard() async {
+    if (!_dirty) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final action = await showUnsavedChangesDialog(context);
+    if (!mounted) return;
+    switch (action) {
+      case UnsavedChangesAction.save:
+        await _save(context);
+      case UnsavedChangesAction.discard:
+        Navigator.of(context).pop();
+      case UnsavedChangesAction.keepEditing:
+        break;
+    }
   }
 
   // ── Birthday picker ────────────────────────────────────────────────────────
@@ -333,7 +378,7 @@ class _ContactEditState extends State<ContactEdit> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _confirmDiscard,
                   ),
                 ],
               ),
@@ -712,7 +757,7 @@ class _ContactEditState extends State<ContactEdit> {
                 children: [
                   const Spacer(),
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _confirmDiscard,
                     child: const Text('Cancel'),
                   ),
                   const Gap(8),

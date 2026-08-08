@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Wait for in-flight Pod writes before closing [1.0.13 20260808 gjw]
 + Prompt to save unsaved contact on window close [1.0.12 20260808 gjw]
 + OIDC updates [1.0.11 20260712 tonypioneer]
 + Update solidpod/solidui dependencies [1.0.10 20260703 gjw]

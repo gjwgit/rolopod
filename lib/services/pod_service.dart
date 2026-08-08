@@ -31,6 +31,7 @@ import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 
 import 'package:solidpod/solidpod.dart';
+import 'package:solidui/solidui.dart';
 
 /// Service for reading and writing address books to a Solid Pod.
 ///
@@ -87,7 +88,7 @@ class PodService {
       final ttl = _jsonToTtl('addressBook', jsonContacts);
 
       dev.log('[Pod] Writing $filename …', name: 'PodService');
-      await writePod(filename, ttl, overwrite: true);
+      await SolidPendingWrites.track(writePod(filename, ttl, overwrite: true));
       dev.log('[Pod] Saved $filename', name: 'PodService');
 
       await _addToIndex(bookName);
@@ -187,7 +188,7 @@ class PodService {
 
   static Future<void> _writeIndex(List<String> books) async {
     final ttl = _jsonToTtl('bookIndex', jsonEncode(books));
-    await writePod('index.ttl', ttl, overwrite: true);
+    await SolidPendingWrites.track(writePod('index.ttl', ttl, overwrite: true));
     dev.log('[Pod] Updated index.ttl: $books', name: 'PodService');
   }
 

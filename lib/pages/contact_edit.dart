@@ -219,8 +219,12 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
   /// disturb the navigator. Returns once the Pod write has completed — the
   /// window is destroyed the moment the close guard resolves, so a
   /// fire-and-forget write would be killed mid-flight and the edit lost.
+  ///
+  /// Returns whether the contact actually reached the Pod, so a caller can
+  /// keep the editor open over a failed write rather than closing on top of
+  /// work that was never stored.
 
-  Future<void> _persist(BuildContext context) async {
+  Future<bool> _persist(BuildContext context) async {
     String? clean(TextEditingController c) {
       final v = c.text.trim();
       return v.isEmpty ? null : v;
@@ -257,16 +261,21 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
       // still fire rather than letting the contact be lost silently.
       SolidWriteFailures.reportIfFailed(error, during: 'saving the contact');
 
-      return;
+      return false;
     }
     // Everything is written, so there is nothing unsaved left to prompt about.
     if (mounted) setState(() => _dirty = false);
+
+    return true;
   }
 
   /// Save and close the editor.
+  ///
+  /// Only closes once the write has landed — a failed save leaves the editor
+  /// open with the edit intact, alongside the reported failure.
 
   Future<void> _save(BuildContext context) async {
-    await _persist(context);
+    if (!await _persist(context)) return;
     if (!context.mounted) return;
     Navigator.of(context).pop();
   }
@@ -278,7 +287,7 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
   bool get hasUnsavedChanges => _dirty;
 
   @override
-  Future<void> saveUnsavedChanges() => _persist(context);
+  Future<bool> saveUnsavedChanges() => _persist(context);
 
   /// Close the editor, but if there are unsaved changes first ask the user
   /// whether to save, discard, or keep editing.

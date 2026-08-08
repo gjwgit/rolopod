@@ -21,9 +21,13 @@ import 'package:rolopod/services/app_provider.dart';
 /// guard has not resolved yet.
 
 class FakeProvider extends AppProvider {
-  FakeProvider({this.podWrite});
+  FakeProvider({this.podWrite, this.error});
 
   final Completer<void>? podWrite;
+
+  /// When set, the Pod write reports this failure instead of succeeding.
+
+  final String? error;
   bool written = false;
 
   @override
@@ -32,6 +36,7 @@ class FakeProvider extends AppProvider {
   @override
   Future<String?> saveBookToPod(String bookName) async {
     await podWrite?.future;
+    if (error != null) return error;
     written = true;
     return null;
   }
@@ -127,6 +132,51 @@ void main() {
 
     expect(await future, isTrue);
     expect(provider.written, isTrue);
+  });
+
+  // Regression: saveUnsavedChanges() said "saved" whatever happened, so a
+  // failed Pod write still let the window close and the contact was lost —
+  // exactly what the prompt exists to prevent. resolveAll() must say no.
+  testWidgets('window-close Save resolves false when the Pod write fails',
+      (tester) async {
+    SolidWriteFailures.clear();
+    addTearDown(SolidWriteFailures.clear);
+    final provider = FakeProvider(error: 'Pod unreachable');
+
+    await tester.pumpWidget(wrap(editor(), provider));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Ada');
+    await tester.pump();
+
+    final future = SolidWindowCloseGuard.resolveAll();
+    await tester.pumpAndSettle();
+
+    // The editor behind the dialog has a Save button too, so target the
+    // dialog's one specifically.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Save'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(await future, isFalse);
+    expect(
+      SolidWriteFailures.latest.value,
+      contains('Failed saving the contact.'),
+    );
+    expect(SolidWriteFailures.latest.value, contains('Pod unreachable'));
+
+    // The editor is still open with the edit intact, and still reports it as
+    // unsaved so a second close attempt prompts again.
+    expect(find.text('Ada'), findsOneWidget);
+    final again = SolidWindowCloseGuard.resolveAll();
+    await tester.pumpAndSettle();
+    expect(find.text('Unsaved changes'), findsOneWidget);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+    expect(await again, isFalse);
   });
 
   testWidgets('editor unregisters its resolver on dispose', (tester) async {

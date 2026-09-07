@@ -9,15 +9,15 @@ environment:
 dependencies:
   cupertino_icons: ^1.0.8
   emacs_text_field: ^0.1.0
-  file_picker: any
+  file_picker: ^12.2.0
   flutter:
     sdk: flutter
   flutter_markdown_plus: any
   gap: ^3.0.1
   markdown_tooltip: ^0.0.10
   provider: ^6.1.5
-  solidpod: ^1.0.13
-  solidui: ^1.0.30
+  solidpod: ^1.0.20
+  solidui: ^1.0.39
   url_launcher: any
   uuid: any
   window_manager: ^0.5.1

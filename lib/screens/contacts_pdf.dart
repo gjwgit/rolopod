@@ -25,8 +25,6 @@
 
 library;
 
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -69,7 +67,8 @@ Future<Uint8List> buildContactsPdf(List<Contact> contacts) async {
         children: [
           pw.Text(
             'Contacts',
-            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            style: const pw.TextStyle(
+                fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
           pw.Text(
             '$dateStr  •  ${sorted.length} '
@@ -120,7 +119,7 @@ List<pw.Widget> _contactBlock(Contact c) {
   return [
     pw.Text(
       c.name,
-      style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+      style: const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
     ),
     pw.SizedBox(height: 2),
     ...lines,
@@ -260,15 +259,18 @@ Future<String?> saveContactsPdf(List<int> bytes, String defaultName) async {
       );
       return null;
     }
-    final savePath = await FilePicker.saveFile(
+    final savedUri = await FilePicker.saveFile(
       dialogTitle: 'Save PDF',
       fileName: defaultName,
       type: FileType.custom,
       allowedExtensions: ['pdf'],
+      bytes: Uint8List.fromList(bytes),
     );
-    if (savePath == null) return null;
-    await File(savePath).writeAsBytes(bytes);
-    return savePath;
+    if (savedUri == null) return null;
+
+    return savedUri.scheme == 'file'
+        ? savedUri.toFilePath()
+        : savedUri.toString();
   } catch (e, st) {
     debugPrint('[Contacts PDF] save error: $e\n$st');
     return 'error:Save failed: $e';

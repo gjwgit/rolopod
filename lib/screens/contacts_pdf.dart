@@ -68,7 +68,9 @@ Future<Uint8List> buildContactsPdf(List<Contact> contacts) async {
           pw.Text(
             'Contacts',
             style: const pw.TextStyle(
-                fontSize: 18, fontWeight: pw.FontWeight.bold),
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
           pw.Text(
             '$dateStr  •  ${sorted.length} '

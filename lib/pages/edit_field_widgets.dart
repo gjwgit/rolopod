@@ -92,7 +92,7 @@ class EditField extends StatelessWidget {
       );
 }
 
-// ── Labeled field pair (label + value controllers) ────────────────────────────
+// ── Labelled field pair (label + value controllers) ────────────────────────────
 
 class LabeledField {
   final TextEditingController label;

@@ -28,7 +28,6 @@
 library;
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
@@ -86,18 +85,18 @@ Future<String?> savePickedBytes({
   required String dialogTitle,
 }) async {
   try {
-    final savePath = await FilePicker.saveFile(
+    final savedUri = await FilePicker.saveFile(
       dialogTitle: dialogTitle,
       fileName: fileName,
       type: FileType.custom,
       allowedExtensions: [ext],
-      bytes: kIsWeb ? Uint8List.fromList(bytes) : null,
+      bytes: Uint8List.fromList(bytes),
     );
-    if (savePath == null) return null;
-    if (!kIsWeb) {
-      await File(savePath).writeAsBytes(bytes);
-    }
-    return savePath;
+    if (savedUri == null) return null;
+
+    return savedUri.scheme == 'file'
+        ? savedUri.toFilePath()
+        : savedUri.toString();
   } catch (e, st) {
     debugPrint('[Export] save error: $e\n$st');
     return 'error:Export failed: $e';

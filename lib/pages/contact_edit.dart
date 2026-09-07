@@ -790,7 +790,7 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
     );
   }
 
-  // ── Labeled list builder (emails / phones / urls) ──────────────────────────
+  // ── Labelled list builder (emails / phones / urls) ──────────────────────────
 
   Widget _buildLabeledList(
     BuildContext context, {

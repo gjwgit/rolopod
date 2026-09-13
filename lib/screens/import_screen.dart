@@ -320,28 +320,22 @@ class _ImportScreenState extends State<ImportScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final result = await FilePicker.pickFiles(
+      // pickFile is file_picker 12's single-file picker, returning the file
+      // itself rather than a result wrapper, and the bytes are read from it
+      // on demand rather than through withData. 20260912 gjw
+
+      final file = await FilePicker.pickFile(
         dialogTitle: 'Select RoloPod JSON backup',
         type: FileType.custom,
         allowedExtensions: ['json'],
-        withData: true,
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         setState(() => _loading = false);
         return;
       }
 
-      final file = result.files.first;
-      if (file.bytes == null) {
-        setState(() {
-          _error = 'Could not read file contents.';
-          _loading = false;
-        });
-        return;
-      }
-
-      final content = utf8.decode(file.bytes!);
+      final content = utf8.decode(await file.readAsBytes());
 
       // Detect book name from filename, e.g.
       // rolopod_Personal_20260326_2005.json → Personal. Tolerates older
@@ -473,32 +467,24 @@ class _ImportScreenState extends State<ImportScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final result = await FilePicker.pickFiles(
+      // pickFile is file_picker 12's single-file picker, returning the file
+      // itself rather than a result wrapper, and the bytes are read from it
+      // on demand rather than through withData. 20260912 gjw
+
+      final file = await FilePicker.pickFile(
         dialogTitle: switch (format) {
           _ImportFormat.bbdb => 'Select BBDB file',
           _ImportFormat.vcard => 'Select vCard file',
         },
         type: FileType.any,
-        withData: true,
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         setState(() => _loading = false);
         return;
       }
 
-      final file = result.files.first;
-      final String content;
-
-      if (file.bytes != null) {
-        content = utf8.decode(file.bytes!);
-      } else {
-        setState(() {
-          _error = 'Could not read file contents.';
-          _loading = false;
-        });
-        return;
-      }
+      final content = utf8.decode(await file.readAsBytes());
 
       if (!context.mounted) return;
 

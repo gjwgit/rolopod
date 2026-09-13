@@ -28,7 +28,6 @@
 library;
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
@@ -77,7 +76,7 @@ String timestampedName(String bookName, String ext) {
 
 /// Prompt for a location and write [bytes] there.
 ///
-/// Returns the saved path on success, null if cancelled, or an 'error:'
+/// Returns the saved location on success, null if cancelled, or an 'error:'
 /// prefixed message on failure. On web the browser handles the write.
 Future<String?> savePickedBytes({
   required List<int> bytes,
@@ -86,18 +85,20 @@ Future<String?> savePickedBytes({
   required String dialogTitle,
 }) async {
   try {
-    final savePath = await FilePicker.saveFile(
+    // From file_picker 12 the picker writes the bytes itself on every
+    // platform, so the web/native split is gone, and it reports the
+    // destination as a Uri — a content:// one on Android, which has no
+    // file path to show. 20260912 gjw
+
+    final saved = await FilePicker.saveFile(
       dialogTitle: dialogTitle,
       fileName: fileName,
+      bytes: Uint8List.fromList(bytes),
       type: FileType.custom,
       allowedExtensions: [ext],
-      bytes: kIsWeb ? Uint8List.fromList(bytes) : null,
     );
-    if (savePath == null) return null;
-    if (!kIsWeb) {
-      await File(savePath).writeAsBytes(bytes);
-    }
-    return savePath;
+    if (saved == null) return null;
+    return saved.isScheme('file') ? saved.toFilePath() : saved.toString();
   } catch (e, st) {
     debugPrint('[Export] save error: $e\n$st');
     return 'error:Export failed: $e';

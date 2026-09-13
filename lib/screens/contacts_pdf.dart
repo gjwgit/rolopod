@@ -25,8 +25,6 @@
 
 library;
 
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -69,7 +67,8 @@ Future<Uint8List> buildContactsPdf(List<Contact> contacts) async {
         children: [
           pw.Text(
             'Contacts',
-            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            style: const pw.TextStyle(
+                fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
           pw.Text(
             '$dateStr  •  ${sorted.length} '
@@ -120,7 +119,7 @@ List<pw.Widget> _contactBlock(Contact c) {
   return [
     pw.Text(
       c.name,
-      style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+      style: const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
     ),
     pw.SizedBox(height: 2),
     ...lines,
@@ -249,7 +248,7 @@ List<pw.TextSpan> _inlineSpans(String text, {pw.TextStyle? base}) {
 
 /// Prompt for a filename/location and write the PDF [bytes] there.
 ///
-/// Returns the saved path on success, null if cancelled, or an 'error:'
+/// Returns the saved location on success, null if cancelled, or an 'error:'
 /// prefixed message on failure. On web, falls back to the share sheet.
 Future<String?> saveContactsPdf(List<int> bytes, String defaultName) async {
   try {
@@ -260,15 +259,21 @@ Future<String?> saveContactsPdf(List<int> bytes, String defaultName) async {
       );
       return null;
     }
-    final savePath = await FilePicker.saveFile(
+
+    // From file_picker 12 the picker writes the bytes itself and reports
+    // the destination as a Uri — a content:// one on Android, which has no
+    // file path to show. 20260912 gjw
+
+    final saved = await FilePicker.saveFile(
       dialogTitle: 'Save PDF',
       fileName: defaultName,
+      bytes: Uint8List.fromList(bytes),
+      mimeType: 'application/pdf',
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
-    if (savePath == null) return null;
-    await File(savePath).writeAsBytes(bytes);
-    return savePath;
+    if (saved == null) return null;
+    return saved.isScheme('file') ? saved.toFilePath() : saved.toString();
   } catch (e, st) {
     debugPrint('[Contacts PDF] save error: $e\n$st');
     return 'error:Save failed: $e';

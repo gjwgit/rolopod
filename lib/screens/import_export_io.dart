@@ -85,10 +85,10 @@ Future<String?> savePickedBytes({
   required String dialogTitle,
 }) async {
   try {
-    // From file_picker 12 the picker writes the bytes itself on every
-    // platform, so the web/native split is gone, and it reports the
-    // destination as a Uri — a content:// one on Android, which has no
-    // file path to show. 20260912 gjw
+    // 20260912 gjw From file_picker 12 the picker writes the bytes itself on
+    // every platform, so the web/native split is gone, and it reports the
+    // destination as a Uri — a content:// one on Android, which has no file
+    // path to show.
 
     final saved = await FilePicker.saveFile(
       dialogTitle: dialogTitle,

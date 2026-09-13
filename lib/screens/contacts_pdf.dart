@@ -68,7 +68,9 @@ Future<Uint8List> buildContactsPdf(List<Contact> contacts) async {
           pw.Text(
             'Contacts',
             style: const pw.TextStyle(
-                fontSize: 18, fontWeight: pw.FontWeight.bold),
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
           pw.Text(
             '$dateStr  •  ${sorted.length} '
@@ -260,9 +262,9 @@ Future<String?> saveContactsPdf(List<int> bytes, String defaultName) async {
       return null;
     }
 
-    // From file_picker 12 the picker writes the bytes itself and reports
-    // the destination as a Uri — a content:// one on Android, which has no
-    // file path to show. 20260912 gjw
+    // 20260912 gjw From file_picker 12 the picker writes the bytes itself and
+    // reports the destination as a Uri — a content:// one on Android, which has
+    // no file path to show.
 
     final saved = await FilePicker.saveFile(
       dialogTitle: 'Save PDF',

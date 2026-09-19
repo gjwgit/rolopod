@@ -17,14 +17,14 @@ dependencies:
   markdown_tooltip: ^0.0.10
   provider: ^6.1.5
   solidpod: ^1.0.22
-  solidui: ^1.0.41
+  solidui: ^1.0.46
   url_launcher: any
   uuid: any
   window_manager: ^0.5.1
-
   intl: any
   pdf: any
   printing: any
+
 dependency_overrides:
   intl: ^0.20.2
 

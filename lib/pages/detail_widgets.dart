@@ -26,13 +26,17 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:gap/gap.dart';
+import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_detail.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/services/view_prefs.dart';
 
 // ── Contact field section ─────────────────────────────────────────────────────
 
@@ -153,18 +157,86 @@ class DetailAddressSection extends StatelessWidget {
               ),
               const Gap(2),
               ...addresses.map(
-                (a) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    a.summary,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
+                (a) => _AddressRow(address: a.summary),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// One address line: tap the text to look it up on a map in the browser,
+/// or use the button alongside to copy it to the clipboard.
+
+class _AddressRow extends StatelessWidget {
+  final String address;
+
+  const _AddressRow({required this.address});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: MarkdownTooltip(
+              message: '**Open Map**\n\n'
+                  'Tap the address to look it up on a map in your browser. '
+                  'Choose between OpenStreetMap and Google Maps under '
+                  'Settings.',
+              child: InkWell(
+                onTap: () async {
+                  final provider = await ViewPrefs.mapProvider();
+                  await launchUrl(
+                    provider.searchUrl(address),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Text(
+                  address,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: cs.primary,
+                    decoration: TextDecoration.underline,
+                    decorationColor: cs.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Gap(4),
+          MarkdownTooltip(
+            message: '**Copy Address**\n\n'
+                'Copy this address to the clipboard so you can paste it '
+                'elsewhere.',
+            child: InkWell(
+              onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                await Clipboard.setData(ClipboardData(text: address));
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Address copied.')),
+                );
+              },
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.copy_outlined,
+                  size: 14,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

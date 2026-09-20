@@ -34,6 +34,7 @@ import 'package:solidui/solidui.dart';
 import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/address_book.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/widgets/map_provider_setting.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -60,6 +61,23 @@ class SettingsScreen extends StatelessWidget {
               label: const Text('New address book'),
               onPressed: () => _newBook(context, provider),
             ),
+            const Gap(32),
+            Text(
+              'Address Lookup',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const Gap(8),
+            Text(
+              'The map service opened when you tap an address on a contact '
+              'card. This is a device preference and is not stored on your '
+              'Pod.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const Gap(16),
+            const MapProviderSetting(),
             const Gap(32),
             Text(
               'Shared With Me',

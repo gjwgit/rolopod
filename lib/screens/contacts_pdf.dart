@@ -33,8 +33,10 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/models/contact.dart';
+import 'package:rolopod/widgets/error_dialog.dart';
 
 /// Build a PDF document listing [contacts], sorted alphabetically by name.
 ///
@@ -309,12 +311,15 @@ void showContactsPdfPreview(
                   'rolopod_contacts.pdf',
                 );
                 if (!ctx.mounted || msg == null) return;
-                final text = msg.startsWith('error:')
-                    ? msg.substring(6)
-                    : 'Saved to $msg';
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(text)),
-                );
+                if (msg.startsWith('error:')) {
+                  await showErrorDialog(
+                    ctx,
+                    title: 'Could not save the PDF',
+                    message: msg.substring(6),
+                  );
+                } else {
+                  showPositiveSnackBar(ctx, 'Saved to $msg');
+                }
               },
             ),
           ],

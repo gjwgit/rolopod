@@ -31,6 +31,7 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
+import 'package:solidui/solidui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rolopod/models/contact.dart';
@@ -218,11 +219,10 @@ class _AddressRow extends StatelessWidget {
                 'elsewhere.',
             child: InkWell(
               onTap: () async {
-                final messenger = ScaffoldMessenger.of(context);
                 await Clipboard.setData(ClipboardData(text: address));
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Address copied.')),
-                );
+                if (context.mounted) {
+                  showPositiveSnackBar(context, 'Address copied.');
+                }
               },
               borderRadius: BorderRadius.circular(4),
               child: Padding(

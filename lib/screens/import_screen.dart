@@ -34,6 +34,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:gap/gap.dart';
 import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
+import 'package:solidui/solidui.dart';
 
 import 'package:rolopod/constants/app.dart';
 import 'package:rolopod/models/contact.dart';
@@ -317,7 +318,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
     // Capture context-dependent objects before the first await.
     final provider = context.read<AppProvider>();
-    final messenger = ScaffoldMessenger.of(context);
 
     try {
       // 20260912 gjw pickFile is file_picker 12's single-file picker, returning
@@ -389,17 +389,21 @@ class _ImportScreenState extends State<ImportScreen> {
             .toList();
         provider.importContacts(toImport, bookName: confirmed.bookName);
         final error = await provider.saveBookToPod(confirmed.bookName);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              error != null
-                  ? 'Imported but failed to save to pod: $error'
-                  : 'Restored ${toImport.length} contact'
-                      '${toImport.length == 1 ? '' : 's'} '
-                      'into "${confirmed.bookName}".',
-            ),
-          ),
-        );
+        if (!context.mounted) return;
+
+        // 20260921 gjw A failed Pod save is reported inline, like the other
+        // errors on this screen, rather than on a bar that slides away.
+
+        if (error != null) {
+          setState(() => _error = 'Imported but failed to save to pod: $error');
+        } else {
+          showPositiveSnackBar(
+            context,
+            'Restored ${toImport.length} contact'
+            '${toImport.length == 1 ? '' : 's'} '
+            'into "${confirmed.bookName}".',
+          );
+        }
       }
     } catch (e, st) {
       debugPrint('[Import] JSON error: $e\n$st');
@@ -424,7 +428,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
     // Capture context-dependent objects before the first await.
     final provider = context.read<AppProvider>();
-    final messenger = ScaffoldMessenger.of(context);
 
     final result = exportBytes(provider.serialiseBook(bookName), format);
     final title = format == ExportFormat.json
@@ -445,12 +448,9 @@ class _ImportScreenState extends State<ImportScreen> {
       setState(() => _error = savePath.substring(6));
       return;
     }
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Exported to $savePath'),
-        duration: const Duration(seconds: 4),
-      ),
-    );
+    if (context.mounted) {
+      showPositiveSnackBar(context, 'Exported to $savePath');
+    }
   }
 
   Future<void> _pickAndImport(
@@ -464,7 +464,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
     // Capture context-dependent objects before the first await.
     final provider = context.read<AppProvider>();
-    final messenger = ScaffoldMessenger.of(context);
 
     try {
       // 20260912 gjw pickFile is file_picker 12's single-file picker, returning
@@ -527,17 +526,16 @@ class _ImportScreenState extends State<ImportScreen> {
         // Persist to pod.
         final error = await provider.saveBookToPod(confirmed.bookName);
         if (!context.mounted) return;
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              error != null
-                  ? 'Imported but failed to save to pod: $error'
-                  : 'Imported ${importContacts.length} contact'
-                      '${importContacts.length == 1 ? '' : 's'} '
-                      'into "${confirmed.bookName}".',
-            ),
-          ),
-        );
+        if (error != null) {
+          setState(() => _error = 'Imported but failed to save to pod: $error');
+        } else {
+          showPositiveSnackBar(
+            context,
+            'Imported ${importContacts.length} contact'
+            '${importContacts.length == 1 ? '' : 's'} '
+            'into "${confirmed.bookName}".',
+          );
+        }
       }
     } catch (e, st) {
       debugPrint('[Import] error: $e\n$st');

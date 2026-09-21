@@ -108,6 +108,11 @@ void main() {
 
       expect(copied, address.summary);
       expect(find.text('Address copied.'), findsOneWidget);
+
+      // Run past solidui's auto-dismiss so no timer outlives the test.
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
     });
   });
 

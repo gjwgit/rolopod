@@ -17,7 +17,7 @@ dependencies:
   markdown_tooltip: ^0.0.10
   provider: ^6.1.5
   shared_preferences: ^2.3.0
-  solidpod: ^1.0.22
+  solidpod: ^1.0.24
   solidui: ^1.0.50
   url_launcher: any
   uuid: any

@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Updated macOS installer builder [1.0.22 20260922 gjw]
 + Share the SnackBar helper with solidui [1.0.21 20260921 gjw]
 + Tap an address to map it, or copy it [1.0.20 20260921 gjw]
 + Date-stamp comments at the start rather than the end [1.0.19 20260914 gjw]

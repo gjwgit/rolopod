@@ -163,11 +163,12 @@ if [[ "${status}" == "completed" ]]; then
 
     echo '******************** UPLOAD MACOS DMG NOTARIZED'
 
-    # 20260920 gjw Because I now also have various -macos-dmg I
-    # renamed this to be -notarized-macos-dmg and same for zip. This
-    # will be the default installer so it is called <app>-macos.dmg on
-    # the installer repository, noting the renaming of the file to
-    # remove the -notarized as below.
+    # 20260920 gjw Because I now have various targets that finish with 
+    # -macos-dmg I renamed the endswith to be -notarized-macos-dmg and same for
+    # zip. This will be the default installer so it is called
+    # <app>-macos.dmg on the installer repository, noting the renaming
+    # of the file to remove the -notarized as below for notarized-dmg
+    # and notarize-zip.
 
     artifactId=$(gh api -H "Accept: application/vnd.github+json" /repos/${REP}/${APP}/actions/artifacts \
 		    --jq '.artifacts[] | select(.name | endswith("-notarized-macos-dmg")) | .id' | head -n 1)

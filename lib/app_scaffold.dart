@@ -1,6 +1,6 @@
 /// AppScaffold — main SolidScaffold with left nav for RoloPod.
 ///
-// Time-stamp: <Sunday 2026-06-28 11:49:45 +1000 Graham Williams>
+// Time-stamp: <Friday 2026-09-25 18:04:41 +1000 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -138,7 +138,7 @@ class _AppScaffoldState extends State<AppScaffold> {
         [Australian Solid Community](https://solidcommunity.au) web site.
 
         ''',
-        readmeUrl: 'https://gjwgit.github.io/rolopod',
+        docsUrl: 'https://gjwgit.github.io/rolopod',
       ),
       appBar: SolidAppBarConfig(
         title: appName,

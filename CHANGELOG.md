@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Capitalise the first and last name as you type [1.0.24 20260926 gjw]
 + Update to solidui 1.1 [1.0.23 20260925 gjw]
 + Updated macOS installer builder [1.0.22 20260922 gjw]
 + Share the SnackBar helper with solidui [1.0.21 20260921 gjw]

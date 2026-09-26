@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 import 'package:rolopod/models/contact.dart';
+import 'package:rolopod/utils/capitalise_first_formatter.dart';
 
 // ── Section label ─────────────────────────────────────────────────────────────
 
@@ -73,17 +74,23 @@ class EditField extends StatelessWidget {
   final String label;
   final FocusNode? focusNode;
 
+  /// Upper case the first character as the user types, for name fields.
+
+  final bool capitaliseFirst;
+
   const EditField({
     super.key,
     required this.controller,
     required this.label,
     this.focusNode,
+    this.capitaliseFirst = false,
   });
 
   @override
   Widget build(BuildContext context) => TextField(
         controller: controller,
         focusNode: focusNode,
+        inputFormatters: capitaliseFirst ? [CapitaliseFirstFormatter()] : null,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),

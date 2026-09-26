@@ -415,6 +415,7 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
                           child: EditField(
                             controller: _firstName,
                             label: 'First name',
+                            capitaliseFirst: true,
                           ),
                         ),
                         const Gap(12),
@@ -422,6 +423,7 @@ class _ContactEditState extends State<ContactEdit> with UnsavedChangesMixin {
                           child: EditField(
                             controller: _lastName,
                             label: 'Last name',
+                            capitaliseFirst: true,
                           ),
                         ),
                       ],

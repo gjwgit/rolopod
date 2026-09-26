@@ -75,6 +75,9 @@ class EditField extends StatelessWidget {
   final FocusNode? focusNode;
 
   /// Upper case the first character as the user types, for name fields.
+  ///
+  /// Also opens the on-screen keyboard shifted, so on Android the first
+  /// character is upper case by default.
 
   final bool capitaliseFirst;
 
@@ -91,6 +94,13 @@ class EditField extends StatelessWidget {
         controller: controller,
         focusNode: focusNode,
         inputFormatters: capitaliseFirst ? [CapitaliseFirstFormatter()] : null,
+
+        // 20260926 gjw Sentences, not words: only the first character is
+        // shifted, so a name like de la Cruz types through as written.
+
+        textCapitalization: capitaliseFirst
+            ? TextCapitalization.sentences
+            : TextCapitalization.none,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),

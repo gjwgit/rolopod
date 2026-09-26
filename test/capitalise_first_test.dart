@@ -69,6 +69,24 @@ void main() {
       expect(controller.text, 'Graham');
     });
 
+    testWidgets('asks the on-screen keyboard to start shifted', (tester) async {
+      final controller = TextEditingController();
+
+      await tester.pumpWidget(
+        harness(
+          EditField(
+            controller: controller,
+            label: 'First name',
+            capitaliseFirst: true,
+          ),
+        ),
+      );
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+
+      expect(field.textCapitalization, TextCapitalization.sentences);
+    });
+
     testWidgets('leaves text alone by default', (tester) async {
       final controller = TextEditingController();
 

@@ -26,8 +26,8 @@ dependencies:
   pdf: any
   printing: any
 
-dependency_overrides:
-  intl: ^0.20.2
+#dependency_overrides:
+#  intl: ^0.20.2
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3

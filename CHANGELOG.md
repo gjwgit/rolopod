@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ Replace the deprecated SolidLogin required parameter [1.0.28 20261029 gjw]
 + Remove deprecated file_picker parameters [1.0.27 20261029 gjw]
 + View a PDF of or copy a single contact, upgrade packages [1.0.26 20261029 gjw]
 + Open the keyboard shifted for the first and last name [1.0.25 20260926 gjw]

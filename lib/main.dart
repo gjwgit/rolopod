@@ -118,7 +118,7 @@ class _RoloPodAppState extends State<RoloPodApp> {
       ),
       themeMode: solidThemeNotifier.themeMode,
       home: SolidLogin(
-        required: false,
+        continueButtonStyle: const ContinueButtonStyle(visible: true),
         title: 'RoloPod'.toUpperCase().replaceAll(' - ', '\n'),
         image: const AssetImage('assets/images/app_image.jpg'),
         logo: const AssetImage('assets/images/app_icon.png'),

@@ -34,6 +34,10 @@ This app has been pair programmed by [Graham
 Williams](https://togaware.com/Graham.Williams.html) and [Claude
 Code](https://claude.com/product/claude-code).
 
+## 1.1 Fine tuning and updated installers
+
++ Update installers to innerpod, skip iOS without secrets [1.1.0 20261029 gjw]
+
 ## 1.0 New secret keey handling
 
 + Replace the deprecated SolidLogin required parameter [1.0.28 20261029 gjw]

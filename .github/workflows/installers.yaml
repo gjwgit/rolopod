@@ -48,7 +48,10 @@ env:
   MACOS_APP_RELEASE_UNSIGNED_PATH: build/macos/Build/Products/Release-unsigned
   MACOS_APP_RELEASE_STAGING_PATH: build/macos/Build/Products/Release-staging
   MACOS_APP_RELEASE_DEV_PATH: build/macos/Build/Products/Release-dev
-  FLUTTER_VERSION: "3.47.5"
+  # 20261029 gjw Every subosito/flutter-action step sets cache: true, so
+  # the Flutter SDK and the pub packages are kept between runs, keyed on
+  # this version, rather than downloaded again by every job.
+  FLUTTER_VERSION: "3.47.7"
 
 jobs:
 
@@ -74,14 +77,27 @@ jobs:
   # tacked onto the ZIP build. By being separate it is easier to test
   # separately or to build separately as required.
 
-  package-linux-deb:
+  # 20261029 gjw BUILT ONCE, as for innerpod. The Flutter Linux release is
+  # built by build-linux alone and handed to the deb, zip and snap jobs as
+  # a one day artifact, so every Linux installer carries the same binary
+  # and Flutter is built once rather than three times. Each packaging
+  # job keeps its own commit message trigger, and build-linux runs for any
+  # of them.
+  #
+  # Pinned to ubuntu-24.04 rather than ubuntu-latest: the binary links
+  # against the libraries it is built with, and the snap's core24 base and
+  # the deb's Depends are both 24.04. A newer runner would build a binary
+  # the snap cannot run.
+
+  build-linux:
     if: |
       contains(github.event.head_commit.message, 'bump version') ||
       contains(github.event.head_commit.message, 'build installers') ||
       contains(github.event.head_commit.message, 'build linux') ||
-      contains(github.event.head_commit.message, 'build deb')
+      contains(github.event.head_commit.message, 'build deb') ||
+      contains(github.event.head_commit.message, 'build snap')
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
 
@@ -110,6 +126,7 @@ jobs:
           channel: stable
           architecture: x64
           flutter-version: ${{env.FLUTTER_VERSION}}
+          cache: true
 
       - name: Confirm Flutter Version
         run: flutter --version
@@ -122,6 +139,44 @@ jobs:
 
       - name: Build Flutter Linux app
         run: flutter build linux --release
+
+      # A tarball, because an artifact does not keep the executable bit.
+
+      - name: Pack the bundle
+        run: tar -C build/linux/x64/release -cf bundle.tar bundle
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{env.APP}}-linux-bundle
+          path: bundle.tar
+          retention-days: 1
+
+  package-linux-deb:
+    needs: build-linux
+    if: |
+      contains(github.event.head_commit.message, 'bump version') ||
+      contains(github.event.head_commit.message, 'build installers') ||
+      contains(github.event.head_commit.message, 'build linux') ||
+      contains(github.event.head_commit.message, 'build deb')
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Clone Repository
+        uses: actions/checkout@v6
+
+      - name: Download the bundle
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{env.APP}}-linux-bundle
+
+      - name: Unpack the bundle
+        run: |
+          mkdir -p build/linux/x64/release
+          tar -C build/linux/x64/release -xf bundle.tar
+          rm bundle.tar
 
       # Package as DEB
 
@@ -194,6 +249,7 @@ jobs:
           path: build/${{env.APP}}_${{env.VERSION}}_amd64.deb
 
   package-linux-zip:
+    needs: build-linux
     if: |
       contains(github.event.head_commit.message, 'bump version') ||
       contains(github.event.head_commit.message, 'build installers') ||
@@ -203,43 +259,16 @@ jobs:
 
     steps:
 
-      - name: Clone Repository
-        uses: actions/checkout@v6
-
-      - name: Install OS Dependencies
-        run: |
-          sudo apt-get update -y
-          printf '#%.0s' {1..72}; printf '\nninja-build\n'
-          sudo apt-get install -y ninja-build
-          printf '#%.0s' {1..72}; printf '\nlibgtk-3-dev\n'
-          sudo apt-get install -y libgtk-3-dev
-          printf '#%.0s' {1..72}; printf '\nclang cmake\n'
-          sudo apt-get install -y clang cmake
-
-      - name: Install extra Linux packages
-        if: env.LINUX_PKGS != ''
-        run: |
-          printf '#%.0s' {1..72}; printf '\n${{env.LINUX_PKGS}}\n'
-          sudo apt-get install -y ${{env.LINUX_PKGS}}
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Download the bundle
+        uses: actions/download-artifact@v6
         with:
-          channel: stable
-          architecture: x64
-          flutter-version: ${{env.FLUTTER_VERSION}}
+          name: ${{env.APP}}-linux-bundle
 
-      - name: Confirm Flutter Version
-        run: flutter --version
-
-      - name: Install Flutter Project Dependencies
-        run: flutter pub get
-
-      - name: Enable Linux Build
-        run: flutter config --enable-linux-desktop
-
-      - name: Build Flutter Linux app
-        run: flutter build linux --release
+      - name: Unpack the bundle
+        run: |
+          mkdir -p build/linux/x64/release
+          tar -C build/linux/x64/release -xf bundle.tar
+          rm bundle.tar
 
       # Package as ZIP
 
@@ -256,7 +285,12 @@ jobs:
           name: ${{env.APP}}-linux-zip
           path: build/linux/x64/release/bundle/${{env.APP}}-linux.zip
 
+  # 20261029 gjw The snap wraps the shared bundle too: snap/snapcraft.yaml
+  # dumps build/linux/x64/release/bundle rather than building with
+  # snapcraft's flutter plugin, which compiled the app a fourth time.
+
   package-linux-snap:
+    needs: build-linux
     if: |
       contains(github.event.head_commit.message, 'bump version') ||
       contains(github.event.head_commit.message, 'build installers') ||
@@ -270,19 +304,16 @@ jobs:
       - name: Clone Repository
         uses: actions/checkout@v6
 
-      - name: Install OS Dependencies
-        run: |
-          sudo apt-get update -y
+      - name: Download the bundle
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{env.APP}}-linux-bundle
 
-      # 20260311 gjw be sure to add dependencies into the snapcraft
-      # file rather than here, including llvm, lld, libsecret-1-dev,
-      # libjsoncpp-dev, for flutter_secure_storage
-
-      - name: Install extra Linux packages
-        if: env.LINUX_PKGS != ''
+      - name: Unpack the bundle
         run: |
-          printf '#%.0s' {1..72}; printf '\n${{env.LINUX_PKGS}}\n'
-          sudo apt-get install -y ${{env.LINUX_PKGS}}
+          mkdir -p build/linux/x64/release
+          tar -C build/linux/x64/release -xf bundle.tar
+          rm bundle.tar
 
       - name: Build snap
         if: hashFiles('snap/**') != ''
@@ -380,6 +411,7 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: ${{env.FLUTTER_VERSION}}
+          cache: true
 
       - name: Confirm Flutter Version
         run: flutter --version
@@ -793,11 +825,50 @@ jobs:
   ########################################################################
   # IOS
 
-  package-ios-ipa:
+  # 20260928 gjw Triggered like the other platforms. These steps had never
+  # executed — neither here nor in todopod, which carries the same job
+  # disabled behind a `bump version x` that matches nothing — so expect the
+  # first few runs to need attention rather than to be green. Two faults were
+  # already found and fixed without running it: the ExportOptions plist it
+  # names did not exist, and the keychain was created with an undefined
+  # password variable.
+  #
+  # A failure here does not hold up the other installers, which are separate
+  # jobs. Narrow this back to `build ios` alone if it becomes a nuisance.
+  #
+  # 20261002 gjw Skip the iOS build while the app has no iOS signing secrets,
+  # so a repository not yet set up for iOS shows a green tick rather than a
+  # red cross. A job-level `if:` cannot read `secrets`, so this small job
+  # tests for them and package-ios-ipa runs only when they are present. Add
+  # IOS_CERTIFICATE and IOS_PROVISION_PROFILE to the repository secrets and
+  # the build runs again with no change here.
+
+  check-ios-secrets:
     if: |
       contains(github.event.head_commit.message, 'bump version') ||
       contains(github.event.head_commit.message, 'build installers') ||
-      contains(github.event.head_commit.message, 'build ios')
+      contains(github.event.head_commit.message, 'build ios') ||
+      contains(github.event.head_commit.message, 'upload ios')
+    runs-on: ubuntu-latest
+    outputs:
+      has_ios: ${{ steps.check.outputs.has_ios }}
+    steps:
+      - name: Check for iOS signing secrets
+        id: check
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_PROVISION_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
+        run: |
+          if [ -n "$IOS_CERTIFICATE" ] && [ -n "$IOS_PROVISION_PROFILE" ]; then
+            echo "has_ios=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_ios=false" >> $GITHUB_OUTPUT
+            echo "::notice::iOS signing secrets are not set - skipping the iOS build"
+          fi
+
+  package-ios-ipa:
+    needs: check-ios-secrets
+    if: needs.check-ios-secrets.outputs.has_ios == 'true'
     runs-on: macos-latest
     env:
       IOS_APP_RELEASE_PATH: build/ios/ipa
@@ -812,6 +883,7 @@ jobs:
         with:
           channel: "stable"
           flutter-version: ${{env.FLUTTER_VERSION}}
+          cache: true
 
       - name: Confirm Flutter Version
         run: flutter --version
@@ -847,9 +919,15 @@ jobs:
           echo -n "$IOS_PROVISION_PROFILE" | base64 --decode -o $PP_PATH
 
           echo "Create temporary keychain"
-          security create-keychain -p "$MACOS_KEYCHAIN_PWD" $KEYCHAIN_PATH
+          # 20260928 gjw $KEYCHAIN_PASSWORD, not $MACOS_KEYCHAIN_PWD. Only
+          # the former is defined in the env block above; the latter is the
+          # name of the SECRET, which is not in scope here. Creating and
+          # unlocking with an empty string and then handing the real password
+          # to set-key-partition-list below fails on the mismatch. The macOS
+          # job, which does work, uses $KEYCHAIN_PASSWORD throughout.
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$MACOS_KEYCHAIN_PWD" $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
           echo "Import certificate to keychain"
           security import $CERTIFICATE_PATH -P "$IOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
@@ -881,6 +959,12 @@ jobs:
         # run: flutter build ipa
         # Option for manual signing
         # Use --verbose to debug build and signing issues
+        #
+        # 20260928 gjw The build number comes from pubspec's `+N`, which
+        # `make minor_versions` now increments with every release. App Store
+        # Connect refuses a number it has seen before, so that increment is
+        # what makes a second upload possible. Nothing is passed here: one
+        # source of truth, and `flutter build` already reads it.
         run: flutter build ipa --export-options-plist=ios/GithubActionsExportOptions.plist
 
       - name: Note the xcarchive created
@@ -922,7 +1006,48 @@ jobs:
           name: ${{ env.APP }}-ipa
           path: ${{ env.IOS_APP_RELEASE_PATH }}/${{ env.APP }}.ipa
 
-      # # Important! Cleanup: remove the certificate and provisioning profile from the runner!
+      # 20260928 gjw Uploads the IPA straight to App Store Connect, saving a
+      # Transporter round trip. The AC_API_* secrets are already set — the
+      # macOS job uses the same three for notarisation.
+      #
+      # GATED ON `upload ios` IN THE COMMIT MESSAGE, and that gate is the
+      # point. The job itself runs on every `bump version`, and a build
+      # cannot be deleted from App Store Connect once uploaded, only
+      # expired, so an ungated step would fill the history with builds
+      # nobody asked for. Say `upload ios` when you mean it.
+      #
+      # An App Store Connect app record for com.togaware.rolopod has to
+      # exist first (appstoreconnect.apple.com → Apps → +), or the upload is
+      # rejected with no such app — which reads like a signing failure and
+      # is not one.
+      #
+      # The build number comes from pubspec's `+N`. App Store Connect
+      # refuses a number it has seen before, so a second upload needs
+      # another `make minor_versions` first.
+      #
+      # altool wants the key at a path it searches by name, hence the
+      # AuthKey_<id>.p8 filename rather than somewhere in RUNNER_TEMP.
+
+      - name: Upload the IPA to App Store Connect
+        if: contains(github.event.head_commit.message, 'upload ios')
+        env:
+          AC_API_KEY: ${{ secrets.AC_API_KEY }}
+          AC_API_KEY_ID: ${{ secrets.AC_API_KEY_ID }}
+          AC_API_ISSUER_ID: ${{ secrets.AC_API_ISSUER_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$AC_API_KEY" | base64 --decode \
+            -o ~/.appstoreconnect/private_keys/AuthKey_$AC_API_KEY_ID.p8
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file ${{ env.IOS_APP_RELEASE_PATH }}/${{ env.APP }}.ipa \
+            --apiKey "$AC_API_KEY_ID" \
+            --apiIssuer "$AC_API_ISSUER_ID"
+
+          rm -f ~/.appstoreconnect/private_keys/AuthKey_$AC_API_KEY_ID.p8
+
+      # Important! Cleanup: remove the certificate and provisioning profile from the runner!
       # - name: Clean up keychain and provisioning profile
       #   if: ${{ always() }}
       #   run: |
@@ -974,6 +1099,7 @@ jobs:
           channel: 'stable'
           architecture: x64
           flutter-version: ${{env.FLUTTER_VERSION}}
+          cache: true
 
       - name: Confirm Flutter Version
         run: flutter --version

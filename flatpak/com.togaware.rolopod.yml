@@ -1,0 +1,58 @@
+# RoloPod as a Flatpak.
+#
+# 20261029 gjw Wraps the Flutter release bundle built on the host (`make
+# flatpak` builds it first, as the workflow does) in the GNOME runtime, as
+# for innerpod. Nothing is built from source.
+#
+# Build with `make flatpak`, which builds outside the project (see the
+# Makefile), then run with `flatpak run com.togaware.rolopod`.
+
+id: com.togaware.rolopod
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: rolopod
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # The Pod, and the fonts google_fonts and the PDF fetch.
+  - --share=network
+  # solidpod keeps the security key through flutter_secure_storage, which
+  # on GNU/Linux is libsecret talking to the keyring over this name.
+  - --talk-name=org.freedesktop.secrets
+  # No filesystem access is granted: importing, exporting and saving a PDF
+  # go through file_picker's file chooser portal, and tapping a phone
+  # number or address through url_launcher's open URI portal.
+
+modules:
+
+  # The app: the Flutter bundle as built, under /app/rolopod, since the
+  # executable finds its lib/ and data/ beside itself.
+
+  - name: rolopod
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/rolopod /app/bin
+      - cp -r bundle/. /app/rolopod/
+      - ln -s /app/rolopod/rolopod /app/bin/rolopod
+      - install -Dm644 com.togaware.rolopod.desktop
+          /app/share/applications/com.togaware.rolopod.desktop
+      - install -Dm644 com.togaware.rolopod.metainfo.xml
+          /app/share/metainfo/com.togaware.rolopod.metainfo.xml
+      - install -Dm644 icon_square.png
+          /app/share/icons/hicolor/512x512/apps/com.togaware.rolopod.png
+    sources:
+      - type: dir
+        path: ../build/linux/x64/release/bundle
+        dest: bundle
+      - type: file
+        path: com.togaware.rolopod.desktop
+      - type: file
+        path: com.togaware.rolopod.metainfo.xml
+      # Made from assets/images/app_icon.png (880x716) padded to a square:
+      # a Flatpak icon must be square.
+      - type: file
+        path: ../installers/icon_square.png

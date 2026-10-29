@@ -78,9 +78,9 @@ jobs:
   # separately or to build separately as required.
 
   # 20261029 gjw BUILT ONCE, as for innerpod. The Flutter Linux release is
-  # built by build-linux alone and handed to the deb, zip and snap jobs as
-  # a one day artifact, so every Linux installer carries the same binary
-  # and Flutter is built once rather than three times. Each packaging
+  # built by build-linux alone and handed to the deb, zip, snap and flatpak
+  # jobs as a one day artifact, so every Linux installer carries the same
+  # binary and Flutter is built once rather than four times. Each packaging
   # job keeps its own commit message trigger, and build-linux runs for any
   # of them.
   #
@@ -95,7 +95,8 @@ jobs:
       contains(github.event.head_commit.message, 'build installers') ||
       contains(github.event.head_commit.message, 'build linux') ||
       contains(github.event.head_commit.message, 'build deb') ||
-      contains(github.event.head_commit.message, 'build snap')
+      contains(github.event.head_commit.message, 'build snap') ||
+      contains(github.event.head_commit.message, 'build flatpak')
 
     runs-on: ubuntu-24.04
 
@@ -326,6 +327,64 @@ jobs:
         with:
           name: ${{ env.APP }}-linux-snap
           path: ${{ steps.build.outputs.snap }}
+
+  # 20261029 gjw The Flatpak, as `make flatpak` builds it locally:
+  # flatpak/com.togaware.rolopod.yml wraps the shared bundle in the GNOME
+  # runtime, as for innerpod. The bundle names Flathub as its runtime
+  # repository, so `flatpak install` fetches the GNOME runtime when it is
+  # missing.
+  #
+  # IN FLATHUB'S CONTAINER, because the plain runner will not do it, as
+  # radiopod found: Ubuntu's flatpak-builder is too old, and Flathub's
+  # org.flatpak.Builder asks the host for the SDK over a session bus the
+  # runner does not have. The container has the SDK and a
+  # current flatpak-builder, and no Flutter, hence the shared bundle.
+
+  package-linux-flatpak:
+    needs: build-linux
+    if: |
+      contains(github.event.head_commit.message, 'bump version') ||
+      contains(github.event.head_commit.message, 'build installers') ||
+      contains(github.event.head_commit.message, 'build linux') ||
+      contains(github.event.head_commit.message, 'build flatpak')
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
+      options: --privileged
+
+    steps:
+
+      - name: Clone Repository
+        uses: actions/checkout@v6
+
+      - name: Download the bundle
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{env.APP}}-linux-bundle
+
+      # Where the manifest looks for it, as after a local build.
+
+      - name: Unpack the bundle
+        run: |
+          mkdir -p build/linux/x64/release
+          tar -C build/linux/x64/release -xf bundle.tar
+          rm bundle.tar
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: flatpak/com.togaware.rolopod.yml
+          bundle: ${{env.APP}}_amd64.flatpak
+          cache-key: flatpak-builder-${{ hashFiles('flatpak/*.yml') }}
+          upload-artifact: false
+
+      - name: Upload flatpak artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{env.APP}}-linux-flatpak
+          path: ${{env.APP}}_amd64.flatpak
 
   # publish:
   #   needs: build

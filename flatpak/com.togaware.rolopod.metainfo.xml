@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 20261029 gjw AppStream metadata: what GNOME Software, KDE Discover and
+     Flathub show for the app. The description follows the snap's. -->
+<component type="desktop-application">
+  <id>com.togaware.rolopod</id>
+  <name>RoloPod</name>
+  <summary>A privacy preserving rolodex for your Solid Pod</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <developer id="com.togaware">
+    <name>Togaware</name>
+  </developer>
+  <url type="homepage">https://github.com/gjwgit/rolopod</url>
+  <url type="bugtracker">https://github.com/gjwgit/rolopod/issues</url>
+  <launchable type="desktop-id">com.togaware.rolopod.desktop</launchable>
+
+  <description>
+    <p>
+      RoloPod collects your address books and contacts and stores them
+      securely, encrypted, in your personal online data store (Pod) hosted
+      by the Solid server of your choice.
+    </p>
+    <p>
+      Import and export contacts as JSON, BBDB or vCard, view them as a PDF,
+      keep track of birthdays, find duplicates, and share your contacts
+      with others through your Pod.
+    </p>
+  </description>
+
+  <categories>
+    <category>Office</category>
+    <category>ContactManagement</category>
+  </categories>
+
+  <keywords>
+    <keyword>contacts</keyword>
+    <keyword>address book</keyword>
+    <keyword>solid</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="1.1.0" date="2026-10-29"/>
+  </releases>
+</component>

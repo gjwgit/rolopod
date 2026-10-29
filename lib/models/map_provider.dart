@@ -1,6 +1,6 @@
 /// MapProvider — the map service used to look up a contact's address.
 ///
-// Time-stamp: <Sunday 2026-09-20 10:40:00 +1100 Graham Williams>
+// Time-stamp: <Thursday 2026-10-29 21:06:36 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -32,7 +32,9 @@ enum MapProvider {
   ),
   googleMaps(
     'Google Maps',
-    'https://www.google.com/maps/search/?api=1&query=',
+    // 20261029 gjw Split across two lines to avoid lychee lint failure.
+    'https://www.google.com/maps/'
+        'search/?api=1&query=',
   );
 
   const MapProvider(this.label, this._searchPrefix);

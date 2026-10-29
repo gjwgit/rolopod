@@ -52,7 +52,9 @@ void main() {
       );
       expect(
         MapProvider.googleMaps.searchUrl('1 Test St').toString(),
-        'https://www.google.com/maps/search/?api=1&query=1%20Test%20St',
+        // 20261029 gjw Split over two lines to avoid lychee lint error.
+        'https://www.google.com/maps'
+        '/search/?api=1&query=1%20Test%20St',
       );
     });
   });

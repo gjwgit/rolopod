@@ -36,6 +36,8 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.1 Fine tuning and updated installers
 
++ Remove CONTINUE from login [1.1.2 20261029 gjw]
++ Add a flatpak build [1.1.1 20261029 gjw]
 + Update installers to innerpod, skip iOS without secrets [1.1.0 20261029 gjw]
 
 ## 1.0 New secret keey handling

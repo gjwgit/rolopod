@@ -81,7 +81,6 @@ String timestampedName(String bookName, String ext) {
 Future<String?> savePickedBytes({
   required List<int> bytes,
   required String fileName,
-  required String ext,
   required String dialogTitle,
 }) async {
   try {
@@ -94,8 +93,6 @@ Future<String?> savePickedBytes({
       dialogTitle: dialogTitle,
       fileName: fileName,
       bytes: Uint8List.fromList(bytes),
-      type: FileType.custom,
-      allowedExtensions: [ext],
     );
     if (saved == null) return null;
     return saved.isScheme('file') ? saved.toFilePath() : saved.toString();

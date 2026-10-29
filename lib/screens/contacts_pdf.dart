@@ -273,8 +273,6 @@ Future<String?> saveContactsPdf(List<int> bytes, String defaultName) async {
       fileName: defaultName,
       bytes: Uint8List.fromList(bytes),
       mimeType: 'application/pdf',
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
     );
     if (saved == null) return null;
     return saved.isScheme('file') ? saved.toFilePath() : saved.toString();

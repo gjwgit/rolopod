@@ -436,7 +436,6 @@ class _ImportScreenState extends State<ImportScreen> {
     final savePath = await savePickedBytes(
       bytes: result.bytes,
       fileName: timestampedName(bookName, result.ext),
-      ext: result.ext,
       dialogTitle: title,
     );
 

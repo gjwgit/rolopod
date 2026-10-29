@@ -1,6 +1,6 @@
 /// RoloPod — privacy-first address book with Solid Pod storage.
 ///
-// Time-stamp: <Sunday 2026-05-31 08:55:56 +1000 Graham Williams>
+// Time-stamp: <Thursday 2026-10-29 21:21:20 +1100 Graham Williams>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
@@ -118,7 +118,6 @@ class _RoloPodAppState extends State<RoloPodApp> {
       ),
       themeMode: solidThemeNotifier.themeMode,
       home: SolidLogin(
-        continueButtonStyle: const ContinueButtonStyle(visible: true),
         title: 'RoloPod'.toUpperCase().replaceAll(' - ', '\n'),
         image: const AssetImage('assets/images/app_image.jpg'),
         logo: const AssetImage('assets/images/app_icon.png'),

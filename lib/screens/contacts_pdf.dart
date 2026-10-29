@@ -290,13 +290,19 @@ void showContactsPdfPreview(
   BuildContext context,
   List<Contact> contacts,
 ) {
+  // 20261029 gjw A single contact (from the detail card) is saved under its
+  // own name rather than the generic contacts filename.
+
+  final fileName = contacts.length == 1
+      ? 'rolopod_${contacts.first.name.replaceAll(RegExp(r'\W+'), '_')}.pdf'
+      : 'rolopod_contacts.pdf';
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => Scaffold(
         appBar: AppBar(title: const Text('Contacts PDF')),
         body: PdfPreview(
           build: (_) => buildContactsPdf(contacts),
-          pdfFileName: 'rolopod_contacts.pdf',
+          pdfFileName: fileName,
           canChangePageFormat: false,
           canChangeOrientation: false,
           canDebug: false,
@@ -306,10 +312,7 @@ void showContactsPdfPreview(
               icon: const Icon(Icons.save_alt),
               onPressed: (ctx, build, pageFormat) async {
                 final bytes = await build(pageFormat);
-                final msg = await saveContactsPdf(
-                  bytes,
-                  'rolopod_contacts.pdf',
-                );
+                final msg = await saveContactsPdf(bytes, fileName);
                 if (!ctx.mounted || msg == null) return;
                 if (msg.startsWith('error:')) {
                   await showErrorDialog(

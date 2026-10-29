@@ -26,9 +26,11 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:gap/gap.dart';
+import 'package:markdown_tooltip/markdown_tooltip.dart';
 import 'package:provider/provider.dart';
 import 'package:solidui/solidui.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,7 +38,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:rolopod/models/contact.dart';
 import 'package:rolopod/pages/contact_edit.dart';
 import 'package:rolopod/pages/detail_widgets.dart';
+import 'package:rolopod/screens/contacts_pdf.dart';
 import 'package:rolopod/services/app_provider.dart';
+import 'package:rolopod/utils/contact_text.dart';
 
 class ContactDetail extends StatefulWidget {
   final Contact contact;
@@ -157,6 +161,20 @@ class _ContactDetailState extends State<ContactDetail> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  MarkdownTooltip(
+                    message: '''
+
+**Copy**
+
+Copy this contact's details to the clipboard as plain text, ready to
+paste into an email, message or another app.
+
+''',
+                    child: IconButton(
+                      icon: Icon(Icons.copy, color: cs.onPrimaryContainer),
+                      onPressed: () => _copy(context),
                     ),
                   ),
                 ],
@@ -374,6 +392,17 @@ class _ContactDetailState extends State<ContactDetail> {
                     onPressed: () => _confirmDelete(context),
                   ),
                   const Spacer(),
+                  MarkdownTooltip(
+                    message: '**View PDF**\n\n'
+                        'Display this contact as a PDF. '
+                        'From the preview you can save it to a file.',
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                      label: const Text('View PDF'),
+                      onPressed: () =>
+                          showContactsPdfPreview(context, [_contact]),
+                    ),
+                  ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Close'),
@@ -391,6 +420,12 @@ class _ContactDetailState extends State<ContactDetail> {
         ),
       ),
     );
+  }
+
+  Future<void> _copy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: contactAsText(_contact)));
+    if (!context.mounted) return;
+    showPositiveSnackBar(context, 'Copied ${_contact.name} to the clipboard.');
   }
 
   String _formatTimestamp(DateTime dt) {

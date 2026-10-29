@@ -1,24 +1,33 @@
 name: rolopod
 description: Privacy-first address book app with Solid Pod storage.
 publish_to: none
-version: 1.0.25+2
+version: 1.0.26+2
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
 
+# 20250722 gjw To automatically upgrade package dependencies:
+#
+#   flutter pub upgrade --major-versions
+#
+# To see which dependencies have newer versions available:
+#
+#   flutter pub outdated
+
 dependencies:
-  cupertino_icons: ^1.0.8
-  emacs_text_field: ^0.1.0
-  file_picker: ^12.3.0
   flutter:
     sdk: flutter
+
+  cupertino_icons: ^2.0.0
+  emacs_text_field: ^1.0.0
+  file_picker: ^13.3.0
   flutter_markdown_plus: any
   gap: ^3.0.1
   markdown_tooltip: ^0.0.10
   provider: ^6.1.5
   shared_preferences: ^2.3.0
-  solidpod: ^1.0.24
-  solidui: ^1.2.0
+  solidpod: ^1.1.2
+  solidui: ^1.5.15
   url_launcher: any
   uuid: any
   window_manager: ^0.5.1
@@ -31,7 +40,7 @@ dependencies:
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
 

@@ -17,6 +17,21 @@ ifeq ($(VER),)
   VER = $(if $(wildcard pubspec.yaml),$(shell egrep '^version:' pubspec.yaml | cut -d' ' -f2),)
 endif
 
+# 20261016 gjw Build-time keys an app must not commit, such as RadioPod's
+# Podcast Index key and secret, live in a gitignored JSON file named by
+# DEFINES_FILE. Passed to every run and build when the file exists, and
+# nothing at all when it does not, so apps without one are unaffected.
+
+DEFINES_FILE ?= dart_defines.json
+DART_DEFINES = $(if $(wildcard $(DEFINES_FILE)),--dart-define-from-file=$(DEFINES_FILE),)
+
+# 20261016 gjw Release builds may be obfuscated by an app that sets
+# OBFUSCATE before including this file, as RadioPod does to make its
+# scrambled Podcast Index secret harder to dig out. Empty, and so nothing,
+# for every other app. Symbols go to build/symbols to decode stack traces.
+
+OBFUSCATE ?=
+
 # 20260914 gjw The published package name, as the README's installation
 # stanza names it. Taken from the pubspec rather than the directory, which
 # need not match.
@@ -116,7 +131,7 @@ LOC := $(shell if [ -f support/loc.sh ]; then echo support/loc.sh; \
 
 .PHONY: chrome
 chrome:
-	flutter run -d chrome --release --web-port=4400
+	flutter run $(DART_DEFINES) -d chrome --release --web-port=4400
 
 # 20220503 gjw The following fails if the target files already exist -
 # just needs to be run once.
@@ -141,17 +156,17 @@ upgrade:
 
 .PHONY: linux
 linux: pubspec.lock $(BUILD_RUNNER) upgrade
-	flutter run --device-id linux
+	flutter run $(DART_DEFINES) --device-id linux
 
 # Turn off debugPrint() output.
 
 .PHONY: qlinux
 qlinux: pubspec.lock $(BUILD_RUNNER) upgrade
-	flutter run --dart-define DEBUG_PRINT="FALSE" --device-id linux
+	flutter run $(DART_DEFINES) --dart-define DEBUG_PRINT="FALSE" --device-id linux
 
 .PHONY: macos
 macos: $(BUILD_RUNNER) upgrade
-	flutter run --device-id macos
+	flutter run $(DART_DEFINES) --device-id macos
 
 .PHONY: macos.reconfig
 macos.reconfig:
@@ -174,12 +189,12 @@ macos.provision:
 
 .PHONY: android
 android: $(BUILD_RUNNER) upgrade
-	flutter run --device-id $(shell flutter devices | grep android | tr '•' '|' | tr -s '|' | tr -s ' ' | cut -d'|' -f2 | tr -d ' ') --release
+	flutter run $(DART_DEFINES) --device-id $(shell flutter devices | grep android | tr '•' '|' | tr -s '|' | tr -s ' ' | cut -d'|' -f2 | tr -d ' ') --release
 
 .PHONY: emu
 emu:
 	@if [ -n "$(shell flutter devices | grep emulator | cut -d" " -f 6)" ]; then \
-	  flutter run --device-id $(shell flutter devices | grep emulator | cut -d" " -f 6); \
+	  flutter run $(DART_DEFINES) --device-id $(shell flutter devices | grep emulator | cut -d" " -f 6); \
 	else \
 	  flutter emulators --launch Pixel_3a_API_30; \
 	  echo "Emulator has been started. Rerun `make emu` to build the app."; \
@@ -482,21 +497,21 @@ tgz:: $(APP)-$(VER)-linux-x86_64.tar.gz
 $(APP)-$(VER)-linux-x86_64.tar.gz: clean
 	mkdir -p installers
 	rm -rf build/linux/x64/release
-	flutter build linux --release
+	flutter build linux $(DART_DEFINES) $(OBFUSCATE) --release
 	tar --transform 's|^build/linux/x64/release/bundle|$(APP)|' -czvf $@ build/linux/x64/release/bundle
 	cp $@ installers/
 	mv $@ installers/$(APP).tar.gz
 
 apk::
 	@echo '******************** BUILD ANDROID APK'
-	flutter build apk --release
+	flutter build apk $(DART_DEFINES) $(OBFUSCATE) --release
 	cp build/app/outputs/flutter-apk/app-release.apk installers/$(APP).apk
 	cp build/app/outputs/flutter-apk/app-release.apk installers/$(APP)-$(VER).apk
 
 appbundle::
 	@echo '******************** BUILD ANDROID AAB'
 	flutter clean
-	flutter build appbundle --release
+	flutter build appbundle $(DART_DEFINES) $(OBFUSCATE) --release
 	cp build/app/outputs/bundle/release/app-release.aab installers/$(APP).aab
 	cp build/app/outputs/bundle/release/app-release.aab installers/$(APP)-$(VER).aab
 
@@ -504,24 +519,26 @@ realclean::
 	flutter clean
 	flutter pub get
 
-# Create a macos app
-# [20251029 jesscmoore] TODO: add converting to dmg
+# 20251029 jesscmoore Create a macos app TODO: add converting to dmg
 # Build unsigned macos app
+
 dmg-unsigned::
 	flutter clean
-	flutter build macos --release --flavor unsigned
+	flutter build macos $(DART_DEFINES) $(OBFUSCATE) --release --flavor unsigned
 
 # Build macos app signed with development certificate for testing
 # by App Developer Program togaware registered devices
+
 dmg-dev::
 	flutter clean
-	flutter build macos --release --flavor dev
+	flutter build macos $(DART_DEFINES) $(OBFUSCATE) --release --flavor dev
 
 # Build macos app signed with app store distribution for testing
 # on Testflight or publishing
+
 dmg-staging:
 	flutter clean
-	flutter build macos --release --flavor staging
+	flutter build macos $(DART_DEFINES) $(OBFUSCATE) --release --flavor staging
 
 # For the `dev` branch only, update the version sequence number prior
 # to a push (relies on the git.mk being loaded after this
@@ -627,20 +644,18 @@ version:
 	  | sort -V | uniq -c \
 	  | awk '$$1 >= $(ARCHIVE_MIN) { v = $$2 } END { print v }')"
 
-### TODO THESE SHOULD BE CHECKED AND CLEANED UP
-
 .PHONY: docs
 docs::
 	rsync -avzh doc/api/ root@solidcommunity.au:/var/www/html/web/docs/$(APP)/
 
-# 20260914 gjw The README quotes the version twice over — the
-# installation stanza pins `<pkg>: ^x.y.z` and the usage examples pass
-# `version: 'x.y.z'` — and both go stale silently, telling readers to
-# install a release we are well past. Bring them into step with the
-# pubspec here, then list what was set so it can be eyeballed, staying
-# quiet for a README that never names a version. Version strings inside
-# the CHANGELOG format section are left alone: they are illustrating the
-# format, not naming this release.
+# 20260914 gjw Some README quote the version twice over for a
+# package. The installation guide notes `<pkg>: ^x.y.z` and the usage
+# examples pass `version: 'x.y.z'`. Both go stale silently telling
+# readers to install a release of the package from the past. Below we
+# bring them into line with the pubspec. We stay quiet for a README
+# that never names a version. Version strings inside the CHANGELOG
+# format section are left alone as they are illustrating the format
+# and not naming this release.
 
 .PHONY: versions
 versions:
@@ -657,22 +672,42 @@ versions:
 	  fi; \
 	fi
 
-
 BUILD_VER=$(shell grep '^version: ' pubspec.yaml | grep '+' | cut -d'+' -f2)
 MAJ_VER=$(shell grep '^version: ' pubspec.yaml | cut -d'+' -f1 | cut -d':' -f2 | cut -d'.' -f1,2)
 MIN_VER=$(shell grep '^version: ' pubspec.yaml | cut -d'+' -f1 | cut -d':' -f2 | cut -d'.' -f3)
 
+# 20260928 gjw The BUILD NUMBER — the `+N` — is incremented along with the
+# version now, and that matters to the app stores rather than to us.
+#
+# Google Play and App Store Connect both refuse an upload whose build number
+# they have seen before, and both take it from the `+N`. Carrying it across
+# unchanged, as this did, means the first upload of an app succeeds and every
+# one after it is rejected.
+#
+# A project with no `+N` at all keeps none: adding one would change what its
+# platforms see for no reason anyone asked for.
+#
+# Note the missing space in `version:$(MAJ_VER)` below is deliberate and must
+# stay. MAJ_VER comes from `cut -d':' -f2`, which leaves the leading space of
+# "version: 1.1.16" on the front of it, so the space is already there. Adding
+# another writes "version:  1.1.17", and since the next bump cuts on the
+# colon again the indent grows by one space per release.
+
 # Increment minor version in pubspec.yaml
+
 .PHONY: minor_versions
 minor_versions:
 	$(eval MIN_VER = $(shell echo $$(($(MIN_VER) + 1))))
+	$(eval BUILD_VER = $(if $(BUILD_VER),$(shell echo $$(($(BUILD_VER) + 1))),))
 	@echo "Bumping version: $(VER) to $(MAJ_VER).$(MIN_VER)$(if $(BUILD_VER),+$(BUILD_VER),)"
 	perl -pi -e 's|^version:.*|version:$(MAJ_VER).$(MIN_VER)$(if $(BUILD_VER),+$(BUILD_VER),)|' pubspec.yaml
 
 # Increment major version in pubspec.yaml
+
 .PHONY: major_versions
 major_versions:
 	$(eval MAJ_VER = $(shell echo "$(MAJ_VER) + 1.0"  | bc))
+	$(eval BUILD_VER = $(if $(BUILD_VER),$(shell echo $$(($(BUILD_VER) + 1))),))
 	@echo "Bumping version: $(VER) to $(MAJ_VER).$(MIN_VER)$(if $(BUILD_VER),+$(BUILD_VER),)"
 	perl -pi -e 's|^version:.*|version: $(MAJ_VER).$(MIN_VER)$(if $(BUILD_VER),+$(BUILD_VER),)|' pubspec.yaml
 
@@ -680,9 +715,7 @@ major_versions:
 loc: lib/*.dart
 	@bash $(LOC) $(shell find lib -name '*.dart') | sort -nr
 
-#
 # Manage the production install on the remote server.
-#
 
 .PHONY: solidcommunity
 solidcommunity:
@@ -695,3 +728,14 @@ solidcommunity:
 icons:
 	cp assets/images/app_icon.png snap/gui/icon.png
 	dart run flutter_launcher_icons
+
+.PHONY: build_ios upload_ios
+
+
+build_ios:
+	git commit --allow-empty -m "chore: build ios"
+	git push origin HEAD
+
+upload_ios:
+	git commit --allow-empty -m "chore: upload ios"
+	git push origin HEAD

@@ -67,10 +67,24 @@ class _AppScaffoldState extends State<AppScaffold> {
     try {
       // Prompt for the security key if not already cached.
       // This shows the key entry popup on all platforms including Android.
-      await getKeyFromUserIfRequired(context, widget);
+      // 20261002 gjw Cancel on the security key prompt is not an error, and
+      // must not be treated as success.
+      //
+      // getKeyFromUserIfRequired returns false when the prompt was dismissed
+      // (solidui 1.3.0 widened it from void for exactly this). Before that,
+      // _isKeySaved was set true unconditionally, so the status bar claimed a
+      // cached key that was not there, and the Pod was then read with no key
+      // to decrypt it — "You must first set the security key!", once per
+      // file.
+      //
+      // Returning here leaves the user in the app with the prompt dismissed,
+      // which is what Cancel should mean. The key can still be entered from
+      // the status bar.
 
+      final hasKey = await getKeyFromUserIfRequired(context, widget);
       if (!mounted) return;
-      setState(() => _isKeySaved = true);
+      setState(() => _isKeySaved = hasKey);
+      if (!hasKey) return;
 
       // Key is now available — safe to read encrypted pod files.
       provider.setStartupPhase(StartupPhase.loading);

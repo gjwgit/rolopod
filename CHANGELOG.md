@@ -36,6 +36,7 @@ Code](https://claude.com/product/claude-code).
 
 ## 1.0 New secret keey handling
 
++ View a PDF of or copy a single contact, upgrade packages [1.0.26 20261029 gjw]
 + Open the keyboard shifted for the first and last name [1.0.25 20260926 gjw]
 + Capitalise the first and last name as you type [1.0.24 20260926 gjw]
 + Update to solidui 1.1 [1.0.23 20260925 gjw]

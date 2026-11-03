@@ -1,10 +1,10 @@
-/// An address book manager.
+/// A privacy preserving rolodex for your Solid Pod
 ///
-// Time-stamp: <Monday 2026-09-21 17:03:18 +1000 Graham Williams>
+// Time-stamp: <>
 ///
 /// Copyright (C) 2026, Togaware Pty Ltd
 ///
-/// Licensed under the GNU General Public License, Version 3 (the "License");
+/// Licensed under the GNU General Public License, Version 3 (the "License").
 ///
 /// License: https://opensource.org/license/gpl-3-0
 //

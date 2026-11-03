@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 20261029 gjw AppStream metadata: what GNOME Software, KDE Discover and
-     Flathub show for the app. The description follows the snap's. -->
+<!-- AppStream metadata: what GNOME Software, KDE Discover and Flathub show
+     for the app. From the gjwgit/fluttertmpl Copier template, with the
+     summary and description from .copier-answers.yml. @VERSION@ and
+     @DATE@ are filled in from pubspec.yaml when the Flatpak is built. -->
 <component type="desktop-application">
   <id>com.togaware.rolopod</id>
   <name>RoloPod</name>
@@ -35,12 +37,14 @@
   <keywords>
     <keyword>contacts</keyword>
     <keyword>address book</keyword>
+    <keyword>rolodex</keyword>
     <keyword>solid</keyword>
+    <keyword>pod</keyword>
   </keywords>
 
   <content_rating type="oars-1.1"/>
 
   <releases>
-    <release version="1.1.0" date="2026-10-29"/>
+    <release version="@VERSION@" date="@DATE@"/>
   </releases>
 </component>

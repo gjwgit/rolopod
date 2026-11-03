@@ -1,11 +1,13 @@
 # RoloPod as a Flatpak.
 #
-# 20261029 gjw Wraps the Flutter release bundle built on the host (`make
-# flatpak` builds it first, as the workflow does) in the GNOME runtime, as
-# for innerpod. Nothing is built from source.
+# From the gjwgit/fluttertmpl Copier template. Values come from
+# .copier-answers.yml. Local edits are kept by `copier update`, which
+# merges template changes in.
 #
-# Build with `make flatpak`, which builds outside the project (see the
-# Makefile), then run with `flatpak run com.togaware.rolopod`.
+# 20261029 gjw Wraps the Flutter release bundle built on the host (`make
+# flatpak` builds it first, as the installers workflow does) in the GNOME
+# runtime. Build with `make flatpak`, which builds outside the project
+# (see the Makefile), then run with `flatpak run com.togaware.rolopod`.
 
 id: com.togaware.rolopod
 runtime: org.gnome.Platform
@@ -18,11 +20,18 @@ finish-args:
   - --socket=wayland
   - --socket=fallback-x11
   - --device=dri
+
   # The Pod, and the fonts google_fonts and the PDF fetch.
+
   - --share=network
+
   # solidpod keeps the security key through flutter_secure_storage, which
-  # on GNU/Linux is libsecret talking to the keyring over this name.
+  # on GNU/Linux is libsecret talking to the keyring over this name. The
+  # snap needs password-manager-service connected by hand; here it is
+  # granted by the manifest.
+
   - --talk-name=org.freedesktop.secrets
+
   # No filesystem access is granted: importing, exporting and saving a PDF
   # go through file_picker's file chooser portal, and tapping a phone
   # number or address through url_launcher's open URI portal.
@@ -31,6 +40,9 @@ modules:
 
   # The app: the Flutter bundle as built, under /app/rolopod, since the
   # executable finds its lib/ and data/ beside itself.
+  #
+  # 20261030 gjw The AppStream release is the pubspec version, written in
+  # at build time, so it cannot go stale as a hand-kept one did.
 
   - name: rolopod
     buildsystem: simple
@@ -40,19 +52,27 @@ modules:
       - ln -s /app/rolopod/rolopod /app/bin/rolopod
       - install -Dm644 com.togaware.rolopod.desktop
           /app/share/applications/com.togaware.rolopod.desktop
-      - install -Dm644 com.togaware.rolopod.metainfo.xml
+      - sed -e "s/@VERSION@/$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d+ -f1)/"
+          -e "s/@DATE@/$(date +%F)/" com.togaware.rolopod.metainfo.xml
+          > com.togaware.rolopod.metainfo.xml.new
+      - install -Dm644 com.togaware.rolopod.metainfo.xml.new
           /app/share/metainfo/com.togaware.rolopod.metainfo.xml
-      - install -Dm644 icon_square.png
+      - install -Dm644 icon.png
           /app/share/icons/hicolor/512x512/apps/com.togaware.rolopod.png
     sources:
       - type: dir
-        path: ../build/linux/x64/release/bundle
+        path: ../../build/linux/x64/release/bundle
         dest: bundle
       - type: file
         path: com.togaware.rolopod.desktop
       - type: file
         path: com.togaware.rolopod.metainfo.xml
-      # Made from assets/images/app_icon.png (880x716) padded to a square:
-      # a Flatpak icon must be square.
       - type: file
-        path: ../installers/icon_square.png
+        path: ../../pubspec.yaml
+
+      # A Flatpak icon must be square, and no larger than the 512x512
+      # folder it installs into.
+
+      - type: file
+        path: ../../installers/icon_square.png
+        dest-filename: icon.png

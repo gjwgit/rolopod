@@ -32,7 +32,6 @@ AU](https://solidcommunity.au) repository:
 + **Web**
   [solidcommunity](https://rolopod.solidcommunity.au/);
 + **Android**
-  [aab](https://solidcommunity.au/installers/rolopod.aab) or
   [apk](https://solidcommunity.au/installers/rolopod.apk);
 + **GNU/Linux**
   [deb](https://solidcommunity.au/installers/rolopod_amd64.deb) or

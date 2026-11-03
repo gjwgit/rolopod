@@ -14,7 +14,7 @@
 #   Trivial update or bug fix
 
 ifeq ($(VER),)
-  VER = $(if $(wildcard pubspec.yaml),$(shell egrep '^version:' pubspec.yaml | cut -d' ' -f2),)
+  VER = $(if $(wildcard pubspec.yaml),$(shell grep -E '^version:' pubspec.yaml | cut -d' ' -f2),)
 endif
 
 # 20261016 gjw Build-time keys an app must not commit, such as RadioPod's
@@ -37,7 +37,7 @@ OBFUSCATE ?=
 # need not match.
 
 ifeq ($(PKG),)
-  PKG = $(if $(wildcard pubspec.yaml),$(shell egrep '^name:' pubspec.yaml | cut -d' ' -f2),)
+  PKG = $(if $(wildcard pubspec.yaml),$(shell grep -E '^name:' pubspec.yaml | cut -d' ' -f2),)
 endif
 
 define FLUTTER_HELP
@@ -459,7 +459,7 @@ qtest_detail:
 
 .PHONY: qtest
 qtest:
-	@echo $(APP) `egrep '^version: ' pubspec.yaml`
+	@echo $(APP) `grep -E '^version: ' pubspec.yaml`
 	@echo "flutter version:" `flutter --version | head -1 | cut -d ' ' -f 2`
 	make qtest_detail > ignore/qtest_$(shell date +%Y%m%d%H%M%S).txt
 
@@ -555,7 +555,7 @@ ifeq ($(BRANCH),dev)
 push::
 	@echo $(SEPARATOR)
 	perl -pi -e 's|(^version: .*)\+.*|$$1+$(VERSEQ)|' pubspec.yaml
-	-egrep '^version: .*\+.*' pubspec.yaml && \
+	-grep -E '^version: .*\+.*' pubspec.yaml && \
 	git commit -m "Bump sequence $(VERSEQ)" pubspec.yaml
 endif
 
@@ -657,9 +657,12 @@ docs::
 # format section are left alone as they are illustrating the format
 # and not naming this release.
 
+# 20261030 gjw The fluttertmpl snapcraft.yaml has no version line, the
+# snap reading it from pubspec.yaml, so only touch one that has.
+
 .PHONY: versions
 versions:
-	@if [ -f snap/snapcraft.yaml ]; then \
+	@if [ -f snap/snapcraft.yaml ] && grep -q '^version:' snap/snapcraft.yaml; then \
 	  perl -pi -e 's|^version:.*|version: $(VER)|' snap/snapcraft.yaml; \
 	  echo "Updated version in snap/snapcraft.yaml to $(VER)"; \
 	fi

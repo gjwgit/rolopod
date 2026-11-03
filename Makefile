@@ -18,7 +18,7 @@
 #   Trivial update or bug fix
 
 APP=$(shell pwd | xargs basename)
-VER = $(shell egrep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
+VER = $(shell grep -E '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
 DATE=$(shell date +%Y-%m-%d)
 
 # Identify a destination used by install.mk
@@ -27,20 +27,13 @@ DEST=/var/www/html/$(APP)
 
 # The host for the repository of packages, the path on the server to
 # the download folder, and the URL to the downloads.
+#
+# 20261030 gjw From install in .copier-answers.yml, rendered by the
+# gjwgit/fluttertmpl Copier template, rather than tested here by app name.
 
-# Directory basename (e.g., rattle)
-
-DIRBASE := $(notdir $(CURDIR))
-
-ifeq ($(DIRBASE),rattle)
-  REPO=togaware.com
-  RLOC=apps/access/
-  DWLD=https://access.togaware.com/
-else
-  REPO=solidcommunity.au
-  RLOC=/var/www/html/web/installers/
-  DWLD=https://$(REPO)/installers/
-endif
+REPO=solidcommunity.au
+RLOC=/var/www/html/web/installers/
+DWLD=https://solidcommunity.au/installers/
 
 # Set user for ssh to server
 
@@ -62,10 +55,8 @@ INC_BASE=support
 # 20261016 gjw Obfuscate release builds, so for example, the
 # scrambled Podcast Index secret in radiopod is harder to find in
 # the binary. Read by support/flutter.mk to optionally obfuscate.
-
-ifeq ($(APP),radiopod)
-  OBFUSCATE = --obfuscate --split-debug-info=build/symbols
-endif
+#
+# 20261030 gjw For any app with build.secrets in .copier-answers.yml.
 
 # Specific Makefiles will be loaded if they are found in
 # INC_BASE. Sometimes the INC_BASE is shared by multiple local
@@ -99,7 +90,9 @@ $(APP):
   apk	     Upload the installer to $(REPO)
   snapstore  Publish the $(VER) snap to the Snap Store stable channel
   upload_android  Build the $(VER) bundle and send it to Play internal testing
+  winget     Write the $(VER) winget manifests to installers/winget/
   flatpak    Build installers/$(APP)-$(VER).flatpak and install it for this user
+  update     Bring in the gjwgit/fluttertmpl template's changes
 
 endef
 export HELP
@@ -136,17 +129,24 @@ tgz::
 # `make ginstall` fetches them (installers/update.sh). These targets
 # remain for uploading a build made on this machine with `make apk` or
 # `make appbundle`.
+#
+# 20261101 gjw ARCHIVE is git ignored, so a fresh clone has no
+# installers/ARCHIVE until something makes it. Each target that archives
+# makes it first.
 
 apk::
 	rsync -avzh installers/$(APP).apk $(REPO):$(RLOC)
 	ssh $(REPO) chmod a+r $(RLOC)$(APP).apk
+	mkdir -p installers/ARCHIVE
 	mv -f installers/$(APP)-*.apk installers/ARCHIVE/
 	rm -f installers/$(APP).apk
 	@echo ''
 
+# 20261031 gjw The aab is for the Play Store only, so it is archived
+# but not uploaded for download.
+
 appbundle::
-	rsync -avzh installers/$(APP).aab $(REPO):$(RLOC)
-	ssh $(REPO) chmod a+r $(RLOC)$(APP).aab
+	mkdir -p installers/ARCHIVE
 	mv -f installers/$(APP)-*.aab installers/ARCHIVE/
 	rm -f installers/$(APP).aab
 	@echo ''
@@ -163,13 +163,18 @@ deb:
 	wget $(DWLD)$(APP)_amd64.deb -O $(APP)_amd64.deb
 	wajig install $(APP)_amd64.deb
 	rm -f $(APP)_amd64.deb
+	mkdir -p installers/ARCHIVE
 	mv -f installers/$(APP)_*.deb installers/ARCHIVE/
 
 # 20261020 gjw A Flatpak, built locally for now. For radiopod the Flutter
 # bundle is built on the host with the scrambled Podcast Index pair, as
-# deb.sh does, and flatpak/com.togaware.radiopod.yml wraps it with a libmpv
-# built from source. Needs `flatpak install --user flathub
+# deb.sh does, and installers/flatpak/com.togaware.radiopod.yml wraps it
+# with a libmpv built from source. Needs `flatpak install --user flathub
 # org.flatpak.Builder org.gnome.Sdk//49`.
+#
+# 20261102 gjw The manifest moved from flatpak/ to installers/flatpak/,
+# beside the other installer files, so its paths to the bundle, the
+# pubspec and the icon start from ../../.
 
 FLATPAK_ID = com.togaware.$(APP)
 FLATPAK_BUILDER = flatpak run org.flatpak.Builder
@@ -190,7 +195,7 @@ flatpak:
 	flutter build linux --release $(DART_DEFINES) $(OBFUSCATE)
 	$(FLATPAK_BUILDER) --user --install --force-clean --disable-rofiles-fuse \
 	  --state-dir=$(FLATPAK_DIR)/state --repo=$(FLATPAK_DIR)/repo \
-	  $(FLATPAK_DIR)/build flatpak/$(FLATPAK_ID).yml
+	  $(FLATPAK_DIR)/build installers/flatpak/$(FLATPAK_ID).yml
 	flatpak build-bundle $(FLATPAK_DIR)/repo \
 	  installers/$(APP)-$(VER).flatpak $(FLATPAK_ID)
 	@echo "Run with: flatpak run $(FLATPAK_ID)"
@@ -250,6 +255,16 @@ upload_android:
 	python3 support/play_upload.py $(AAB_FILE)
 	@echo ''
 
+# 20261030 gjw The winget manifests for the Inno Setup installer that
+# `make ginstall` archived and uploaded under its versioned name. The
+# output is a folder to submit as a pull request to
+# microsoft/winget-pkgs.
+
+.PHONY: winget
+winget:
+	bash support/winget.sh
+	@echo ''
+
 # 20250110 gjw A ginstall of the github built bundles, installed to the
 # repository and moved into ARCHIVE. From 20261028 these include the
 # signed apk and aab.
@@ -279,11 +294,10 @@ debin:
 # at the end as it requires interaction (sudo password) and if earlier
 # it will hold up the oher non-interactive builds.
 
-ifeq ($(DIRBASE),rattle)
-GINSTALLS := upload
-else
+# 20261030 gjw install.prod in .copier-answers.yml says whether the app
+# is also installed to the web (rattle is not).
+
 GINSTALLS := upload prod
-endif
 
 .PHONY: ginstall
 ginstall: $(GINSTALLS)
@@ -319,6 +333,16 @@ zip:
 .PHONY: claude
 claude:
 	bash support/meld_zip_from_claude.sh
+
+# 20261030 gjw Bring in the changes to the shared files from the
+# gjwgit/fluttertmpl Copier template, rendered with this app's values from
+# .copier-answers.yml, merged with any local edits. Replaces
+# support/update.sh and its hard links. Copier refuses a dirty git tree,
+# so commit first.
+
+.PHONY: update
+update:
+	copier update --defaults
 
 .PHONY: bump
 bump:

@@ -111,8 +111,8 @@ Then set up your local installation (only required once):
 ln -s ${HOME}/.local/share/rolopod/rolopod ${HOME}/.local/bin/
 wget https://raw.githubusercontent.com/gjwgit/rolopod/dev/installers/app.desktop -O ${HOME}/.local/share/applications/rolopod.desktop
 sed -i "s/USER/$(whoami)/g" ${HOME}/.local/share/applications/rolopod.desktop
-mkdir -p ${HOME}/.local/share/icons/hicolor/256x256/apps/
-wget https://github.com/gjwgit/rolopod/raw/dev/installers/app.png -O ${HOME}/.local/share/icons/hicolor/256x256/apps/rolopod.png
+mkdir -p ${HOME}/.local/share/icons/hicolor/512x512/apps/
+wget https://github.com/gjwgit/rolopod/raw/dev/assets/images/app_icon_square.png -O ${HOME}/.local/share/icons/hicolor/512x512/apps/rolopod.png
 ```
 
 To install for any user on the computer:
@@ -121,7 +121,7 @@ To install for any user on the computer:
 sudo unzip rolopod-linux.zip -d /opt/rolopod
 sudo ln -s /opt/rolopod/rolopod /usr/local/bin/
 wget https://raw.githubusercontent.com/gjwgit/rolopod/dev/installers/app.desktop -O ${HOME}/usr/local/share/applications/rolopod.desktop
-wget https://github.com/gjwgit/rolopod/raw/dev/installers/app.png -O ${HOME}/use/local/share/icons/rolopod.png
+wget https://github.com/gjwgit/rolopod/raw/dev/assets/images/app_icon_square.png -O ${HOME}/use/local/share/icons/rolopod.png
 ```
 
 Once installed you can run the app from the GNOME desktop through

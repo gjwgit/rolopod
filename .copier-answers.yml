@@ -26,7 +26,6 @@ deb:
   section: utils
 snap: {}
 flatpak:
-  icon: installers/icon_square.png
 windows:
   appid: 8170BD82-02ED-4B6D-A0BD-C0D50408B698
 install:
